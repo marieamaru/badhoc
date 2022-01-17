@@ -1,4 +1,4 @@
-package com.exam.badhoc;
+package com.igm.badhoc;
 
 import org.junit.Test;
 
