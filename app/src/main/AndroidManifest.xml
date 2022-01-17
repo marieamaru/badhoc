@@ -49,14 +49,6 @@
                 android:value="com.igm.badhoc.activity.MainActivity" />
         </activity>
 
-        <activity
-            android:name=".activity.DeviceActivity"
-            android:parentActivityName=".activity.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.igm.badhoc.activity.MainActivity" />
-        </activity>
-
         <!-- Bridgefy SDK key -->
         <meta-data
             android:name="com.bridgefy.sdk.API_KEY"
