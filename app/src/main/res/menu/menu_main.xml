@@ -1,11 +1,12 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.bridgefy.sdk.samples.alerts.com.bridgefy.samples.alerts.MainActivity">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_private_chat"
+        android:icon="@drawable/ic_user"
+        android:title="Private Chat"/>
 
     <item
         android:id="@+id/action_broadcast"
         android:icon="@drawable/ic_broadcast"
-        android:title="@string/broadcast"
-        app:showAsAction="always" />
+        android:title="@string/broadcast"/>
 </menu>

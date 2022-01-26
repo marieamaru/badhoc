@@ -2,19 +2,20 @@ package com.igm.badhoc.model;
 
 import com.google.gson.Gson;
 
-public class Message {
+import java.io.Serializable;
+
+public class MessageBadhoc implements Serializable {
 
     public final static int INCOMING_MESSAGE = 0;
     public final static int OUTGOING_MESSAGE = 1;
 
-    private int    direction;
+    private int direction;
     private String deviceName;
-    private String text;
+    private final String text;
 
-    public Message(String text) {
+    public MessageBadhoc(String text) {
         this.text = text;
     }
-
 
     public int getDirection() {
         return direction;
@@ -37,8 +38,8 @@ public class Message {
     }
 
 
-    public static Message create(String json) {
-        return new Gson().fromJson(json, Message.class);
+    public static MessageBadhoc create(String json) {
+        return new Gson().fromJson(json, MessageBadhoc.class);
     }
 
     @Override

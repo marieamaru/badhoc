@@ -26,29 +26,14 @@
             android:label="@string/app_name"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Uncomment to launch activity automatically on boot for android-things-->
-            <!--<intent-filter>-->
-            <!--<action android:name="android.intent.action.MAIN"/>-->
-            <!--<category android:name="android.intent.category.IOT_LAUNCHER"/>-->
-            <!--<category android:name="android.intent.category.DEFAULT"/>-->
-            <!--</intent-filter>-->
-
         </activity>
-
-        <activity
-            android:name=".activity.ChatActivity"
-            android:parentActivityName=".activity.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.igm.badhoc.activity.MainActivity" />
-        </activity>
-
         <!-- Bridgefy SDK key -->
         <meta-data
             android:name="com.bridgefy.sdk.API_KEY"
