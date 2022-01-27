@@ -9,10 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.igm.badhoc.R;
-import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.model.MessageBadhoc;
-
-import org.w3c.dom.Text;
+import com.igm.badhoc.model.Tag;
 
 import java.io.Serializable;
 import java.util.List;

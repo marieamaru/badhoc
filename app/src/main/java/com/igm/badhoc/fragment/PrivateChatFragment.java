@@ -17,8 +17,8 @@ import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
 import com.igm.badhoc.R;
 import com.igm.badhoc.adapter.MessagesBadhocAdapter;
-import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.model.MessageBadhoc;
+import com.igm.badhoc.model.Tag;
 
 import java.util.ArrayList;
 import java.util.HashMap;

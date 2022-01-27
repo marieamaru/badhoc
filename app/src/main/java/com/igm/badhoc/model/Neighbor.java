@@ -10,17 +10,21 @@ public class Neighbor {
 
     private final String id;
 
+    private int type;
+
     private boolean isNearby;
 
-    private String speed;
+    private int speed;
 
-    private Status status;
+    private float rssi;
+
+    private int status;
 
     private String macAddress;
 
-    private String latitude;
+    private long latitude;
 
-    private String longitude;
+    private long longitude;
 
     private List<Neighbor> neighbourNodes;
 
@@ -33,15 +37,15 @@ public class Neighbor {
         return id;
     }
 
-    public String getSpeed() {
+    public int getSpeed() {
         return speed;
     }
 
-    public Status getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
@@ -53,16 +57,24 @@ public class Neighbor {
         this.macAddress = macAddress;
     }
 
-    public String getLatitude() {
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public long getLatitude() {
         return latitude;
     }
 
-    public void setPosition(String latitude, String longitude) {
+    public void setPosition(long latitude, long longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }
 
-    public String getLongitude() {
+    public long getLongitude() {
         return longitude;
     }
 
@@ -86,8 +98,16 @@ public class Neighbor {
         isNearby = nearby;
     }
 
-    public void setSpeed(String speed) {
+    public void setSpeed(int speed) {
         this.speed = speed;
+    }
+
+    public float getRssi() {
+        return rssi;
+    }
+
+    public void setRssi(float rssi) {
+        this.rssi = rssi;
     }
 
     public static Neighbor create(String json) {

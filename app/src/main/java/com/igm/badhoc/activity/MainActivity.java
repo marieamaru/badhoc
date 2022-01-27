@@ -1,6 +1,13 @@
 package com.igm.badhoc.activity;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +17,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -18,12 +27,12 @@ import com.bridgefy.sdk.client.BridgefyClient;
 import com.bridgefy.sdk.client.RegistrationListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
-import com.igm.badhoc.listener.MessageListenerImpl;
 import com.igm.badhoc.R;
-import com.igm.badhoc.listener.StateListenerImpl;
 import com.igm.badhoc.fragment.BroadcastFragment;
 import com.igm.badhoc.fragment.NeighborsFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
+import com.igm.badhoc.listener.MessageListenerImpl;
+import com.igm.badhoc.listener.StateListenerImpl;
 import com.igm.badhoc.model.Neighbor;
 import com.igm.badhoc.model.Status;
 
@@ -31,7 +40,7 @@ import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener, LocationListener {
 
     private final String TAG = "MainActivity";
     private Neighbor node;
@@ -66,7 +75,21 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         bottomNavigationView.setOnItemSelectedListener(this);
         stateListener = new StateListenerImpl(this);
         messageListener = new MessageListenerImpl(this);
+
         initializeBridgefy();
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_broadcast:
+                loadFragment(broadcastFragment, "");
+                return true;
+            case R.id.action_private_chat:
+                loadFragment(neighborsFragment, "");
+                return true;
+        }
+        return false;
     }
 
     RegistrationListener registrationListener = new RegistrationListener() {
@@ -130,10 +153,9 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startBridgefy();
-
+            Log.e(TAG, "in reque perm : " + node.getLatitude() + node.getLongitude());
         } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
             Toast.makeText(this, "Location permissions needed to start peers discovery.", Toast.LENGTH_SHORT).show();
             finish();
@@ -145,23 +167,14 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      */
 
     private void initializeNode(BridgefyClient bridgefyClient) {
-        /*
-        WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiInfo info = manager.getConnectionInfo();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-        }
-        int rssi = info.getRssi();
-         */
-        String address = getMacAddress();
         node = Neighbor.builder(bridgefyClient.getUserUuid(), Build.MODEL + " " + Build.MANUFACTURER).build();
-        node.setSpeed("speed");
-        node.setStatus(Status.UNDEFINED);
+        node.setType(1); //smartphone
+        node.setSpeed(0);
+        node.setStatus(Status.UNDEFINED.value);
         node.setMacAddress(getMacAddress());
-        node.setPosition("lat", "long");
-        getPosition();
-        Log.e(TAG, "mac : " + address + " position : " + node.getLatitude() + " " + node.getLongitude());
+        node.setRssi(getRssi());
+        setNodePosition();
+        Log.e(TAG, "mac : " + node.getMacAddress() + " position : " + node.getLatitude() + " " + node.getLongitude() + "rssi " + node.getRssi());
     }
 
     private String getMacAddress() {
@@ -188,36 +201,37 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         return "error";
     }
 
-    private void getPosition() {
-        /*
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+    private void setNodePosition() {
+        LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        try {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                node.setPosition((long) location.getLatitude(), (long) location.getLongitude());
+                Log.e(TAG, "in reque perm : " + node.getLatitude() + node.getLongitude());
+            }
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30, 2, this);
+        } catch (Exception e) {
+            node.setPosition(0, 0);
+            Log.e(TAG, "in reque perm : " + node.getLatitude() + node.getLongitude());
+        }
+    }
+
+    private float getRssi() {
+        WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
         }
-        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        node.setLatitude(String.valueOf(location.getLatitude()));
-        node.setLongitude(String.valueOf(location.getLongitude()));
-         */
+        return info.getRssi();
     }
 
     public void onItemClick(String neighborId) {
         privateChatFragment.setMessageBadhocs(neighborId);
         privateChatFragment.setConversationId(neighborId);
         loadFragment(privateChatFragment, neighborId);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_broadcast:
-                loadFragment(broadcastFragment, "");
-                return true;
-            case R.id.action_private_chat:
-                loadFragment(neighborsFragment, "");
-                return true;
-        }
-        return false;
     }
 
     public Neighbor getNode() {
@@ -235,4 +249,18 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     public BroadcastFragment getBroadcastFragment() {
         return broadcastFragment;
     }
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        if (location == null) {
+            // if you can't get speed because reasons :)
+            Log.e(TAG, "cant get location speed");
+        } else {
+            int speed = (int) ((location.getSpeed() * 3600) / 1000);
+            node.setSpeed(speed);
+            Log.e(TAG, "speed : " + speed + " km/h");
+        }
+    }
+
+
 }

@@ -12,8 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bridgefy.sdk.client.Device;
-import com.igm.badhoc.listener.ItemClickListener;
 import com.igm.badhoc.R;
+import com.igm.badhoc.listener.ItemClickListener;
 import com.igm.badhoc.model.Neighbor;
 
 import java.io.Serializable;

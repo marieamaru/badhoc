@@ -10,10 +10,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bridgefy.sdk.client.Device;
-import com.igm.badhoc.listener.ItemClickListener;
 import com.igm.badhoc.R;
 import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.adapter.NeighborsAdapter;
+import com.igm.badhoc.listener.ItemClickListener;
 import com.igm.badhoc.model.Neighbor;
 
 import java.util.ArrayList;
