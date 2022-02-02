@@ -31,6 +31,7 @@ import com.igm.badhoc.R;
 import com.igm.badhoc.fragment.BroadcastFragment;
 import com.igm.badhoc.fragment.NeighborsFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
+import com.igm.badhoc.fragment.ServerFragment;
 import com.igm.badhoc.listener.MessageListenerImpl;
 import com.igm.badhoc.listener.StateListenerImpl;
 import com.igm.badhoc.model.Neighbor;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     private BroadcastFragment broadcastFragment;
     private NeighborsFragment neighborsFragment;
     private PrivateChatFragment privateChatFragment;
+    private ServerFragment serverFragment;
     private Fragment currentFragment;
     private FragmentManager fragmentManager;
     private Bundle bundle;
@@ -64,13 +66,14 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         broadcastFragment = BroadcastFragment.newInstance(bundle);
         neighborsFragment = NeighborsFragment.newInstance(bundle);
         privateChatFragment = PrivateChatFragment.newInstance(bundle);
+        serverFragment = new ServerFragment();
 
         currentFragment = neighborsFragment;
 
         fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastFragment, TAG).hide(broadcastFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, neighborsFragment, TAG).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, privateChatFragment, TAG).hide(privateChatFragment).commit();
-
+        fragmentManager.beginTransaction().add(R.id.fl_fragment, serverFragment, TAG).hide(serverFragment).commit();
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setOnItemSelectedListener(this);
         stateListener = new StateListenerImpl(this);
@@ -87,6 +90,9 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
                 return true;
             case R.id.action_private_chat:
                 loadFragment(neighborsFragment, "");
+                return true;
+            case R.id.action_server:
+                loadFragment(serverFragment, "");
                 return true;
         }
         return false;
