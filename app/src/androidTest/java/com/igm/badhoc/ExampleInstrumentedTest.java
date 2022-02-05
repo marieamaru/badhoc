@@ -1,4 +1,4 @@
-package com.exam.badhoc;
+package com.igm.badhoc;
 
 import android.content.Context;
 

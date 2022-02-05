@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_private_chat"
+        android:icon="@drawable/ic_user"
+        android:title="Private Chat"/>
+
+    <item
+        android:id="@+id/action_broadcast"
+        android:icon="@drawable/ic_broadcast"
+        android:title="@string/broadcast"/>
+
+    <item
+        android:id="@+id/action_server"
+        android:icon="@drawable/ic_server"
+        android:title="Server"/>
+</menu>
