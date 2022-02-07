@@ -1,7 +1,7 @@
 package com.igm.badhoc.model;
 
 public enum Status {
-    UNDEFINED(-1), DOMINATED(1), DOMINATING(0);
+    DOMINATED(0), DOMINATING(1);
 
     public int value;
 

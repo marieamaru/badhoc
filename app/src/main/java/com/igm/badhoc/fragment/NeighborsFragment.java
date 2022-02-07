@@ -14,7 +14,7 @@ import com.igm.badhoc.R;
 import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.adapter.NeighborsAdapter;
 import com.igm.badhoc.listener.ItemClickListener;
-import com.igm.badhoc.model.Neighbor;
+import com.igm.badhoc.model.Node;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class NeighborsFragment extends Fragment implements ItemClickListener {
 
     private RecyclerView neighborsRecyclerView;
     private NeighborsAdapter neighborsAdapter;
-    private List<Neighbor> neighbors;
+    private List<Node> neighbors;
 
     public static NeighborsFragment newInstance(Bundle bundle) {
         NeighborsFragment fragment = new NeighborsFragment();
@@ -52,15 +52,15 @@ public class NeighborsFragment extends Fragment implements ItemClickListener {
 
     @Override
     public void onItemClick(View view, int position) {
-        Neighbor neighbor = neighbors.get(position);
-        ((MainActivity) getActivity()).onItemClick(neighbor.getId());
+        Node node = neighbors.get(position);
+        ((MainActivity) getActivity()).onItemClick(node.getId());
     }
 
-    public void addNeighbor(Neighbor neighbor) {
-        neighborsAdapter.addNeighbor(neighbor);
+    public void addNeighborToConversations(Node node) {
+        neighborsAdapter.addNeighbor(node);
     }
 
-    public void removeNeighbor(Device lostNeighbor) {
+    public void removeNeighborFromConversations(Device lostNeighbor) {
         neighborsAdapter.removeNeighbor(lostNeighbor);
     }
 }

@@ -31,6 +31,8 @@ public class StateListenerImpl extends StateListener {
         HashMap<String, Object> map = new HashMap<>();
         map.put(Tag.PAYLOAD_DEVICE_NAME.value, mainActivity.getNode().getDeviceName());
         map.put(Tag.PAYLOAD_MAC_ADDRESS.value, mainActivity.getNode().getMacAddress());
+        map.put(Tag.PAYLOAD_RSSI.value, String.valueOf(mainActivity.getNode().getRssi()));
+        map.put(Tag.PAYLOAD_IS_DOMINANT.value, String.valueOf(mainActivity.getNode().isDominant()));
         mainActivity.runOnUiThread(() -> Toast.makeText(mainActivity, "device found.", Toast.LENGTH_LONG).show());
         device.sendMessage(map);
     }
@@ -38,7 +40,9 @@ public class StateListenerImpl extends StateListener {
     @Override
     public void onDeviceLost(Device device) {
         Log.w(TAG, "onDeviceLost: " + device.getUserId());
-        mainActivity.getNeighborsFragment().removeNeighbor(device);
+        mainActivity.getNeighborsFragment().removeNeighborFromConversations(device);
+        mainActivity.getNode().removeFromNeighborhood(device.getUserId());
+        //device.getDeviceAddress()
     }
 
     @Override

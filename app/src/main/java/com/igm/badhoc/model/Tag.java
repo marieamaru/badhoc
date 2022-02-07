@@ -6,7 +6,8 @@ public enum Tag {
     PAYLOAD_DEVICE_NAME("device_name"),
     PAYLOAD_MAC_ADDRESS("device_mac_address"),
     PAYLOAD_TEXT("text"),
-    MESSAGES("messages");
+    PAYLOAD_RSSI("rssi"),
+    PAYLOAD_IS_DOMINANT("status");
 
     public final String value;
 

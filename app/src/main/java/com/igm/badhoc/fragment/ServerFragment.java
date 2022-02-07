@@ -12,7 +12,6 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
 import com.igm.badhoc.R;
-import com.igm.badhoc.activity.MainActivity;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -35,8 +34,10 @@ public class ServerFragment extends Fragment {
         btn = view.findViewById(R.id.btn);
         btn.setOnClickListener(view1 -> {
             String clientId = MqttClient.generateClientId();
+            String hivemqUrl = "tcp://broker.hivemq.com:1883";
+            String badzakUrl = "tcp://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
             MqttAndroidClient client =
-                    new MqttAndroidClient(getActivity().getApplicationContext(), "tcp://broker.hivemq.com:1883",
+                    new MqttAndroidClient(getActivity().getApplicationContext(), badzakUrl,
                             clientId);
             try {
                 IMqttToken token = client.connect();
@@ -49,6 +50,7 @@ public class ServerFragment extends Fragment {
                         Log.e(TAG, "connected to server");
 
                     }
+
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                         // Something went wrong e.g. connection timeout or firewall problems

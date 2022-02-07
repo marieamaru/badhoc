@@ -1,6 +1,7 @@
 package com.igm.badhoc.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
 import com.igm.badhoc.R;
+import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
@@ -27,6 +29,7 @@ import java.util.Map;
 
 public class PrivateChatFragment extends Fragment {
 
+    private final String TAG = "PrivateChatFragment";
     private RecyclerView privateChatRecyclerView;
     private MessagesBadhocAdapter messagesBadhocAdapter;
     Map<String, List<MessageBadhoc>> conversationsMap;
@@ -67,7 +70,9 @@ public class PrivateChatFragment extends Fragment {
         // close keyboard after send
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
         // get the message and push it to the views
+        MainActivity mainActivity = (MainActivity) getActivity();
         String messageString = txtMessage.getText().toString().trim();
+        Log.e(TAG, mainActivity.getNode().toString());
         if (messageString.length() > 0) {
             // update the views
             txtMessage.setText("");
@@ -101,7 +106,7 @@ public class PrivateChatFragment extends Fragment {
         messagesBadhocAdapter.notifyDataSetChanged();
     }
 
-    public void addNeighborIfUnknown(String senderId) {
+    public void addNeighborToConversationsIfUnknown(String senderId) {
         if (!this.conversationsMap.containsKey(senderId)) {
             this.conversationsMap.put(senderId, new ArrayList<>());
         }
