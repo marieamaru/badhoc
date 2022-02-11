@@ -1,7 +1,9 @@
 package com.igm.badhoc.activity;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,17 +30,20 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.igm.badhoc.R;
 import com.igm.badhoc.fragment.BroadcastFragment;
 import com.igm.badhoc.fragment.NeighborsFragment;
+import com.igm.badhoc.fragment.NotificationFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
-import com.igm.badhoc.fragment.ServerFragment;
 import com.igm.badhoc.listener.MessageListenerImpl;
 import com.igm.badhoc.listener.StateListenerImpl;
 import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Status;
+import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.service.LocationService;
 
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
 
@@ -48,15 +53,17 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     private BroadcastFragment broadcastFragment;
     private NeighborsFragment neighborsFragment;
     private PrivateChatFragment privateChatFragment;
-    private ServerFragment serverFragment;
+    private NotificationFragment notificationFragment;
     private Fragment currentFragment;
     private FragmentManager fragmentManager;
     private Bundle bundle;
     private boolean isConnectedToInternet;
-    private String currentSenderId;
     private StateListenerImpl stateListener;
     private MessageListenerImpl messageListener;
     private LocationService locationService;
+    private Intent intent = new Intent(Tag.INTENT_MAIN_ACTIVITY.value);
+    private Timer timer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,18 +74,19 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         broadcastFragment = BroadcastFragment.newInstance(bundle);
         neighborsFragment = NeighborsFragment.newInstance(bundle);
         privateChatFragment = PrivateChatFragment.newInstance(bundle);
-        serverFragment = new ServerFragment();
+        notificationFragment = new NotificationFragment();
 
         currentFragment = neighborsFragment;
 
         fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastFragment, TAG).hide(broadcastFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, neighborsFragment, TAG).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, privateChatFragment, TAG).hide(privateChatFragment).commit();
-        fragmentManager.beginTransaction().add(R.id.fl_fragment, serverFragment, TAG).hide(serverFragment).commit();
+        fragmentManager.beginTransaction().add(R.id.fl_fragment, notificationFragment, TAG).hide(notificationFragment).commit();
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setOnItemSelectedListener(this);
         stateListener = new StateListenerImpl(this);
         messageListener = new MessageListenerImpl(this);
+        timer = new Timer();
         initializeBridgefy();
 
     }
@@ -87,13 +95,13 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_broadcast:
-                loadFragment(broadcastFragment, "");
+                loadFragment(broadcastFragment);
                 return true;
             case R.id.action_private_chat:
-                loadFragment(neighborsFragment, "");
+                loadFragment(neighborsFragment);
                 return true;
             case R.id.action_server:
-                loadFragment(serverFragment, "");
+                loadFragment(notificationFragment);
                 return true;
         }
         return false;
@@ -137,10 +145,9 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     }
 
 
-    private void loadFragment(Fragment fragment, String currentSenderId) {
+    private void loadFragment(Fragment fragment) {
         fragmentManager.beginTransaction().hide(currentFragment).show(fragment).commit();
         currentFragment = fragment;
-        this.currentSenderId = currentSenderId;
     }
 
     @Override
@@ -159,10 +166,10 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startBridgefy();
             Log.e(TAG, "in reque perm granted : " + node.getLatitude() + node.getLongitude());
-        } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+        } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
             Toast.makeText(this, "Location permissions needed to start peers discovery.", Toast.LENGTH_SHORT).show();
             finish();
         }
@@ -179,13 +186,8 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         node.setIsDominant(Status.DOMINATED.value);
         node.setMacAddress(getMacAddress());
         node.setRssi(getRssi());
-        if (isConnectedToInternet()) {
-            node.setIsDominant(Status.DOMINATING.value);
-            Toast.makeText(this, "JE SUIS DOMINANT", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "JE SUIS DOMINE", Toast.LENGTH_LONG).show();
-        }
         getLocation();
+        determinesIfDominant();
         Log.e(TAG, "is connected to internet : " + isConnectedToInternet);
         Log.e(TAG, "mac : " + node.getMacAddress() + " position : " + node.getLatitude() + " " + node.getLongitude() + " rssi " + node.getRssi());
     }
@@ -217,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     public void getLocation() {
         locationService = new LocationService(MainActivity.this);
         if (locationService.canGetLocation()) {
-            node.setPosition((long)locationService.getLongitude(),(long) locationService.getLatitude());
+            node.setPosition(String.valueOf(locationService.getLongitude()), String.valueOf(locationService.getLatitude()));
             node.setSpeed(String.valueOf(locationService.getSpeed()));
         } else {
             Log.e(TAG, "cannot get location");
@@ -247,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     public void onItemClick(String neighborId) {
         privateChatFragment.setMessageBadhocs(neighborId);
         privateChatFragment.setConversationId(neighborId);
-        loadFragment(privateChatFragment, neighborId);
+        loadFragment(privateChatFragment);
     }
 
     public Node getNode() {
@@ -264,6 +266,42 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
     public BroadcastFragment getBroadcastFragment() {
         return broadcastFragment;
+    }
+
+    public void broadcastIntentAction(String action, String content) {
+        this.intent.putExtra(action, content);
+        sendBroadcast(this.intent);
+    }
+
+    public boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    TimerTask timerTask = new TimerTask() {
+        @Override
+        public void run() {
+            if (isConnectedToInternet() && node.isDominant() == 0 && node.getDominant() == null) {
+                node.setIsDominant(Status.DOMINATING.value);
+                broadcastIntentAction(Tag.ACTION_CONNECT.value, "connect");
+                Log.e(TAG, "JE SUIS DOMINANT");
+                broadcastIntentAction(Tag.ACTION_UPDATE_NODE_INFO.value, node.nodeKeepAliveMessage());
+            }
+            if (!isConnectedToInternet() && node.isDominant() == 1) {
+                node.setIsDominant(Status.DOMINATED.value);
+                broadcastIntentAction(Tag.ACTION_CONNECT.value, "disconnect");
+                Log.e(TAG, "JE SUIS DOMINE CAR JE N'AI PLUS INTERNET");
+            }
+        }
+    };
+
+    private void determinesIfDominant() {
+        timer.scheduleAtFixedRate(timerTask, 0, 10000);
     }
 
 }

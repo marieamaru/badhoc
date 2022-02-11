@@ -48,12 +48,11 @@ public class BroadcastFragment extends Fragment {
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
         btnSend = view.findViewById(R.id.btnSend);
+        broadcastRecyclerView = view.findViewById(R.id.message_list);
 
         btnSend.setOnClickListener(this::onMessageSend);
-
         conversationId = Tag.BROADCAST_CHAT.value;
         messageBadhocs = new ArrayList<>();
-        broadcastRecyclerView = view.findViewById(R.id.message_list);
         broadcastRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         messagesBadhocAdapter = new MessagesBadhocAdapter(messageBadhocs, conversationId);
         broadcastRecyclerView.setAdapter(messagesBadhocAdapter);
@@ -64,19 +63,15 @@ public class BroadcastFragment extends Fragment {
     public void onMessageSend(View v) {
         // close keyboard after send
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
-        // get the message and push it to the views
         String messageString = txtMessage.getText().toString().trim();
         if (messageString.length() > 0) {
-            // update the views
             txtMessage.setText("");
             MessageBadhoc message = new MessageBadhoc(messageString);
             message.setDirection(MessageBadhoc.OUTGOING_MESSAGE);
-            // create a HashMap object to send
+
             HashMap<String, Object> content = new HashMap<>();
             content.put(Tag.PAYLOAD_TEXT.value, messageString);
-            // Obligatoirement dans BROADCAST CHAT
             content.put(Tag.PAYLOAD_DEVICE_NAME.value, Build.MANUFACTURER + " " + Build.MODEL);
-            //content.put(IntentTag.PAYLOAD_DEVICE_TYPE.value, Neighbor.DeviceType.ANDROID.ordinal());
 
             Message.Builder builder = new Message.Builder();
             builder.setContent(content);
@@ -90,9 +85,5 @@ public class BroadcastFragment extends Fragment {
     public void addMessage(MessageBadhoc message) {
         messageBadhocs.add(message);
         messagesBadhocAdapter.notifyItemInserted(messageBadhocs.size() - 1);
-    }
-
-    public void setConversationId(String conversationId) {
-        messagesBadhocAdapter.setConversationId(conversationId);
     }
 }

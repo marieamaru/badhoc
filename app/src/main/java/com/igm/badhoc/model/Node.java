@@ -1,13 +1,16 @@
 package com.igm.badhoc.model;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializer;
 
-import java.io.Serializable;
-import java.nio.file.SecureDirectoryStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public class Node {
 
@@ -28,31 +31,29 @@ public class Node {
     //if the node is dominant
     private HashMap<String, String> dominating;
 
-    private String macAddress;
-
     //if the node is dominated
     private Neighbor dominant;
 
-    private double latitude;
+    private String lteSignal;
 
-    private double longitude;
+    private String macAddress;
 
-    private HashMap<String,Neighbor> neighborhood;
+    private String latitude;
+
+    private String longitude;
+
+    private List<Neighbor> neighbors;
 
     private Node(final Builder builder) {
         this.id = builder.id;
         this.deviceName = builder.deviceName;
         this.isDominant = 0;
-        this.neighborhood = new HashMap<>();
+        this.neighbors = new ArrayList<>();
         this.dominating = new HashMap<>();
     }
 
     public String getId() {
         return id;
-    }
-
-    public String getSpeed() {
-        return speed;
     }
 
     public void setSpeed(String speed) {
@@ -83,44 +84,53 @@ public class Node {
         this.macAddress = macAddress;
     }
 
-    public String getType() {
-        return type;
-    }
-
     public void setType(String type) {
         this.type = type;
     }
 
-    public double getLatitude() {
+    public String getLatitude() {
         return latitude;
     }
 
-    public void setPosition(long latitude, long longitude) {
+    public void setPosition(String latitude, String longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }
 
-    public double getLongitude() {
+    public String getLongitude() {
         return longitude;
     }
 
-    public Map<String,Neighbor> getNeighborhood() {
-        return neighborhood;
+    public void setLteSignal(String lteSignal) {
+        this.lteSignal = lteSignal;
     }
 
-    public void addToNeighborhood(String id, Neighbor neighbor) {
-        this.neighborhood.put(id, neighbor);
+    public void addToNeighborhood(Neighbor neighbor) {
+        this.neighbors.add(neighbor);
     }
 
-    public void removeFromNeighborhood(String id){
-        this.neighborhood.remove(id);
+    public void removeFromNeighborhood(String id) {
+        for(Neighbor n : this.neighbors){
+            if (n.getId().equals(id)){
+                this.neighbors.remove(n);
+            }
+        }
     }
 
-    public void addToDominating(String senderId, String macAddress){
+    public void addToDominating(String senderId, String macAddress) {
         this.dominating.put(senderId, macAddress);
     }
 
-    public void clearDominatingList(){
+    public void removeFromDominating(String senderId) {
+        this.dominating.remove(senderId);
+
+    }
+
+    public void removeDominant(){
+        this.dominant = null;
+    }
+
+    public void clearDominatingList() {
         this.dominating.clear();
     }
 
@@ -144,13 +154,39 @@ public class Node {
         this.rssi = rssi;
     }
 
-    public static Node create(String json) {
-        return new Gson().fromJson(json, Node.class);
-    }
-
     @Override
     public String toString() {
         return new Gson().toJson(this);
+    }
+
+    public String nodeKeepAliveMessage() {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+
+        JsonSerializer<HashMap<String, Object>> serializer =
+                (src, typeOfSrc, context) -> {
+                    if (src == null || src.isEmpty()) {
+                        return null;
+                    }
+                    JsonArray jsonMacAddress = new JsonArray();
+                    for (Map.Entry<String, Object> entry : src.entrySet()) {
+                        jsonMacAddress.add("" + entry.getValue());
+                    }
+                    return jsonMacAddress;
+                };
+        JsonSerializer<Neighbor> serializer2 =
+                (src, typeOfSrc, context) -> {
+                    if (src == null) {
+                        return null;
+                    }
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("macAddress", src.getMacAddress());
+                    jsonObject.addProperty("RSSI", src.getRSSI());
+
+                    return jsonObject;
+                };
+        gsonBuilder.registerTypeAdapter(HashMap.class, serializer);
+        gsonBuilder.registerTypeAdapter(Neighbor.class, serializer2);
+        return gsonBuilder.create().toJson(this);
     }
 
     public static Builder builder(final String id, final String deviceName) {

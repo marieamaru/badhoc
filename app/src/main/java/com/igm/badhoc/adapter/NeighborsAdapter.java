@@ -86,7 +86,7 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         ViewHolder(View view) {
             super(view);
             mAvatar = view.findViewById(R.id.peerAvatar);
-            mContentView = view.findViewById(R.id.peerName);
+            mContentView = view.findViewById(R.id.notification);
             itemView.setOnClickListener(view1 -> {
                 mClickListener.onItemClick(view1, getAdapterPosition());
                 Toast.makeText(view1.getContext(), "CLICK ON NEIGHBOR", Toast.LENGTH_SHORT).show();
@@ -94,17 +94,6 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         }
 
         void setNeighbor(Node node) {
-            /*
-            switch (neighbor.getDeviceType()) {
-                case ANDROID:
-                    this.mContentView.setText(neighbor.getDeviceName() + " (android)");
-                    break;
-
-                case IPHONE:
-                    this.mContentView.setText(neighbor.getDeviceName() + " (iPhone)");
-                    break;
-            }
-             */
             this.mContentView.setText(node.getDeviceName());
             if (node.isNearby()) {
                 this.mAvatar.setImageResource(R.drawable.user_nearby);

@@ -43,7 +43,7 @@ public class NeighborsFragment extends Fragment implements ItemClickListener {
         neighborsAdapter = new NeighborsAdapter(neighbors);
         neighborsAdapter.setClickListener(this);
 
-        neighborsRecyclerView = view.findViewById(R.id.peer_list);
+        neighborsRecyclerView = view.findViewById(R.id.notif_list);
         neighborsRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         neighborsRecyclerView.setAdapter(neighborsAdapter);
 

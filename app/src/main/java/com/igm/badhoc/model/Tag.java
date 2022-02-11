@@ -7,7 +7,11 @@ public enum Tag {
     PAYLOAD_MAC_ADDRESS("device_mac_address"),
     PAYLOAD_TEXT("text"),
     PAYLOAD_RSSI("rssi"),
-    PAYLOAD_IS_DOMINANT("status");
+    PAYLOAD_IS_DOMINANT("status"),
+    INTENT_SERVER_SERVICE("mqtt"),
+    INTENT_MAIN_ACTIVITY("server"),
+    ACTION_CONNECT("action_connect"),
+    ACTION_UPDATE_NODE_INFO("action_update_node_info");
 
     public final String value;
 

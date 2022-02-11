@@ -39,10 +39,16 @@ public class StateListenerImpl extends StateListener {
 
     @Override
     public void onDeviceLost(Device device) {
-        Log.w(TAG, "onDeviceLost: " + device.getUserId());
+        String lostDevice = device.getUserId();
         mainActivity.getNeighborsFragment().removeNeighborFromConversations(device);
-        mainActivity.getNode().removeFromNeighborhood(device.getUserId());
-        //device.getDeviceAddress()
+        mainActivity.getNode().removeFromNeighborhood(lostDevice);
+        mainActivity.getNode().removeFromDominating(lostDevice);
+        if(mainActivity.getNode().getDominant() != null){
+            if(mainActivity.getNode().getDominant().getId().equals(lostDevice)){
+                mainActivity.getNode().removeDominant();
+            }
+        }
+        Log.e(TAG, "onDeviceLost: " + lostDevice + " \n" + mainActivity.getNode().nodeKeepAliveMessage());
     }
 
     @Override

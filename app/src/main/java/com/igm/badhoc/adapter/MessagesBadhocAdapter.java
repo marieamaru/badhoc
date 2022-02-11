@@ -87,10 +87,8 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
             if (message.getDirection() == MessageBadhoc.INCOMING_MESSAGE &&
                     conversationId.equals(Tag.BROADCAST_CHAT.value)) {
                 this.deviceMessageName.setText(message.getDeviceName());
-                this.txtMessage.setText(message.getText());
-            } else {
-                this.txtMessage.setText(message.getText());
             }
+            this.txtMessage.setText(message.getText());
         }
     }
 }

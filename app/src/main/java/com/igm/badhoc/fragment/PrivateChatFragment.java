@@ -52,16 +52,14 @@ public class PrivateChatFragment extends Fragment {
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
         btnSend = view.findViewById(R.id.btnSend);
+        privateChatRecyclerView = view.findViewById(R.id.message_list);
+
+        messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
+        conversationsMap = new HashMap<>();
 
         btnSend.setOnClickListener(this::onMessageSend);
-        // recover our Neighbor object
-        //conversationName = this.getArguments().getString(IntentTag.INTENT_EXTRA_NAME.value);
-        //conversationId = this.getArguments().getString(IntentTag.INTENT_EXTRA_UUID.value);
-        privateChatRecyclerView = view.findViewById(R.id.message_list);
         privateChatRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
         privateChatRecyclerView.setAdapter(messagesBadhocAdapter);
-        conversationsMap = new HashMap<>();
 
         return view;
     }
@@ -72,7 +70,7 @@ public class PrivateChatFragment extends Fragment {
         // get the message and push it to the views
         MainActivity mainActivity = (MainActivity) getActivity();
         String messageString = txtMessage.getText().toString().trim();
-        Log.e(TAG, mainActivity.getNode().toString());
+        Log.e(TAG, mainActivity.getNode().nodeKeepAliveMessage());
         if (messageString.length() > 0) {
             // update the views
             txtMessage.setText("");
