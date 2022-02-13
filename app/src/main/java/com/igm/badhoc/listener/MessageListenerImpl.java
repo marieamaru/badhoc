@@ -8,6 +8,7 @@ import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Neighbor;
 import com.igm.badhoc.model.Node;
+import com.igm.badhoc.model.Notification;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
 
@@ -56,11 +57,15 @@ public class MessageListenerImpl extends MessageListener {
         // the incoming broadcast message, so device information is included in this packet=
         String incomingMsg = (String) message.getContent().get(Tag.PAYLOAD_TEXT.value);
         String deviceName = (String) message.getContent().get(Tag.PAYLOAD_DEVICE_NAME.value);
-
-        MessageBadhoc messageBadhoc = new MessageBadhoc((String) message.getContent().get("text"));
-        messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
-        messageBadhoc.setDeviceName(deviceName);
-        mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
+        String fromServer = (String) message.getContent().get(Tag.PAYLOAD_FROM_SERVER.value);
+        if(fromServer == null) {
+            MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMsg);
+            messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
+            messageBadhoc.setDeviceName(deviceName);
+            mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
+        } else {
+            mainActivity.getNotificationFragment().addNotification(new Notification(incomingMsg));
+        }
         Log.d(TAG, "Incoming broadcast message: " + incomingMsg);
     }
 

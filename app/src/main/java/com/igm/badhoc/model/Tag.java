@@ -8,10 +8,13 @@ public enum Tag {
     PAYLOAD_TEXT("text"),
     PAYLOAD_RSSI("rssi"),
     PAYLOAD_IS_DOMINANT("status"),
+    PAYLOAD_FROM_SERVER("from_server"),
     INTENT_SERVER_SERVICE("mqtt"),
     INTENT_MAIN_ACTIVITY("server"),
     ACTION_CONNECT("action_connect"),
-    ACTION_UPDATE_NODE_INFO("action_update_node_info");
+    ACTION_MESSAGE_RECEIVED("message_received_from_topic"),
+    ACTION_UPDATE_NODE_INFO("action_update_node_info"),
+    ACTION_CHANGE_TITLE("change_title");
 
     public final String value;
 

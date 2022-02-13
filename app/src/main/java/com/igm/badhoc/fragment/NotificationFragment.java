@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,16 +16,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.igm.badhoc.R;
 import com.igm.badhoc.activity.MainActivity;
-import com.igm.badhoc.adapter.NeighborsAdapter;
 import com.igm.badhoc.adapter.NotificationAdapter;
-import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Notification;
 import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.service.ServerService;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class NotificationFragment extends Fragment {
@@ -45,7 +40,6 @@ public class NotificationFragment extends Fragment {
         title = view.findViewById(R.id.txt_server);
 
         notifications = new ArrayList<>();
-        notifications.add(new Notification("ce soir ", "première notification"));
         notificationAdapter = new NotificationAdapter(notifications);
 
         notificationRecyclerView = view.findViewById(R.id.notif_list);
@@ -60,24 +54,30 @@ public class NotificationFragment extends Fragment {
         return view;
     }
 
+    public void addNotification(Notification notification) {
+        notificationAdapter.addNotification(notification);
+    }
+
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
+            MainActivity mainActivity = (MainActivity) getActivity();
             if (intent.getAction().equals(Tag.INTENT_SERVER_SERVICE.value)) {
-                //title.setText(intent.getStringExtra("publish"));
+                String notificationAction = intent.getStringExtra(Tag.ACTION_MESSAGE_RECEIVED.value);
+                if (notificationAction != null) {
+                    addNotification(new Notification(notificationAction));
+                }
+                String connectedAction = intent.getStringExtra(Tag.ACTION_CHANGE_TITLE.value);
+                if (connectedAction != null) {
+                    title.setText(connectedAction);
+                }
             } else if (intent.getAction().equals(Tag.INTENT_MAIN_ACTIVITY.value)) {
                 String action = intent.getStringExtra(Tag.ACTION_CONNECT.value);
-                MainActivity mainActivity = (MainActivity) getActivity();
                 if (action.equals("disconnect") && mainActivity.isServiceRunning(ServerService.class)) {
-                    getActivity().stopService(intentService);
-                    boolean isStillRunning = mainActivity.isServiceRunning(ServerService.class);
-                    title.setText("no longer connected to server " + isStillRunning);
+                    requireActivity().stopService(intentService);
                 } else if (action.equals("connect") && !mainActivity.isServiceRunning(ServerService.class)) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        getActivity().startForegroundService(intentService);
-                    }
-                    boolean isStillRunning = mainActivity.isServiceRunning(ServerService.class);
-                    title.setText("is now connected to server " + isStillRunning);
+                    intentService.putExtra(Tag.ACTION_UPDATE_NODE_INFO.value, mainActivity.getNode().nodeKeepAliveMessage());
+                    context.startService(intentService);
                 }
             }
         }

@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.igm.badhoc.R;
+import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Notification;
 
 import java.util.List;
@@ -26,6 +27,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
+    public void addNotification(Notification notification) {
+        this.notifications.add(notification);
+        notifyItemInserted(this.notifications.size() - 1);
+    }
 
     @NonNull
     @Override

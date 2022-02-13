@@ -11,6 +11,16 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoLte;
+import android.telephony.CellInfoWcdma;
+import android.telephony.CellSignalStrengthCdma;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.CellSignalStrengthLte;
+import android.telephony.CellSignalStrengthWcdma;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +48,7 @@ import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.service.LocationService;
+import com.igm.badhoc.service.ServerService;
 
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -168,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startBridgefy();
-            Log.e(TAG, "in reque perm granted : " + node.getLatitude() + node.getLongitude());
         } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
             Toast.makeText(this, "Location permissions needed to start peers discovery.", Toast.LENGTH_SHORT).show();
             finish();
@@ -187,8 +197,8 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         node.setMacAddress(getMacAddress());
         node.setRssi(getRssi());
         getLocation();
+        getLteSignal(this);
         determinesIfDominant();
-        Log.e(TAG, "is connected to internet : " + isConnectedToInternet);
         Log.e(TAG, "mac : " + node.getMacAddress() + " position : " + node.getLatitude() + " " + node.getLongitude() + " rssi " + node.getRssi());
     }
 
@@ -246,6 +256,37 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         return isConnectedToInternet;
     }
 
+    private void getLteSignal(Context context) throws SecurityException {
+        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String strength = null;
+        List<CellInfo> cellInfos = telephonyManager.getAllCellInfo();   //This will give info of all sims present inside your mobile
+        if(cellInfos != null) {
+            for (int i = 0 ; i < cellInfos.size() ; i++) {
+                if (cellInfos.get(i).isRegistered()) {
+                    if (cellInfos.get(i) instanceof CellInfoWcdma) {
+                        CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfos.get(i);
+                        CellSignalStrengthWcdma cellSignalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
+                        strength = String.valueOf(cellSignalStrengthWcdma.getDbm());
+                    } else if (cellInfos.get(i) instanceof CellInfoGsm) {
+                        CellInfoGsm cellInfogsm = (CellInfoGsm) cellInfos.get(i);
+                        CellSignalStrengthGsm cellSignalStrengthGsm = cellInfogsm.getCellSignalStrength();
+                        strength = String.valueOf(cellSignalStrengthGsm.getDbm());
+                    } else if (cellInfos.get(i) instanceof CellInfoLte) {
+                        CellInfoLte cellInfoLte = (CellInfoLte) cellInfos.get(i);
+                        CellSignalStrengthLte cellSignalStrengthLte = cellInfoLte.getCellSignalStrength();
+                        strength = String.valueOf(cellSignalStrengthLte.getDbm());
+                    } else if (cellInfos.get(i) instanceof CellInfoCdma) {
+                        CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfos.get(i);
+                        CellSignalStrengthCdma cellSignalStrengthCdma = cellInfoCdma.getCellSignalStrength();
+                        strength = String.valueOf(cellSignalStrengthCdma.getDbm());
+                    }
+                }
+            }
+        }
+        Log.e(TAG, "lte strengh "+ strength);
+        this.node.setLteSignal(strength);
+    }
+
     public void onItemClick(String neighborId) {
         privateChatFragment.setMessageBadhocs(neighborId);
         privateChatFragment.setConversationId(neighborId);
@@ -254,6 +295,10 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
     public Node getNode() {
         return node;
+    }
+
+    public NotificationFragment getNotificationFragment() {
+        return notificationFragment;
     }
 
     public NeighborsFragment getNeighborsFragment() {
@@ -271,6 +316,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     public void broadcastIntentAction(String action, String content) {
         this.intent.putExtra(action, content);
         sendBroadcast(this.intent);
+        Log.e(TAG, "broadcastIntentAction in main activity");
     }
 
     public boolean isServiceRunning(Class<?> serviceClass) {
@@ -290,7 +336,6 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
                 node.setIsDominant(Status.DOMINATING.value);
                 broadcastIntentAction(Tag.ACTION_CONNECT.value, "connect");
                 Log.e(TAG, "JE SUIS DOMINANT");
-                broadcastIntentAction(Tag.ACTION_UPDATE_NODE_INFO.value, node.nodeKeepAliveMessage());
             }
             if (!isConnectedToInternet() && node.isDominant() == 1) {
                 node.setIsDominant(Status.DOMINATED.value);
