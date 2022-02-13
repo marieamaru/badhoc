@@ -17,21 +17,26 @@ import java.util.List;
 
 public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAdapter.MessageViewHolder> implements Serializable {
 
-    private List<MessageBadhoc> messages;
+    private List<MessageBadhoc> messageBadhocs;
     private String conversationId;
 
     public MessagesBadhocAdapter(String conversationId) {
         this.conversationId = conversationId;
     }
 
-    public MessagesBadhocAdapter(List<MessageBadhoc> messages, String conversationId) {
-        this.messages = messages;
+    public MessagesBadhocAdapter(List<MessageBadhoc> messageBadhocs, String conversationId) {
+        this.messageBadhocs = messageBadhocs;
         this.conversationId = conversationId;
+    }
+
+    public void addMessage(MessageBadhoc message) {
+        this.messageBadhocs.add(message);
+        notifyItemInserted(messageBadhocs.size() - 1);
     }
 
     @Override
     public int getItemCount() {
-        return messages.size();
+        return messageBadhocs.size();
     }
 
     public void setConversationId(String conversationId) {
@@ -40,7 +45,7 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
 
     @Override
     public int getItemViewType(int position) {
-        return messages.get(position).getDirection();
+        return messageBadhocs.get(position).getDirection();
     }
 
     @NonNull
@@ -64,11 +69,11 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
 
     @Override
     public void onBindViewHolder(final MessageViewHolder messageHolder, int position) {
-        messageHolder.setMessage(messages.get(position));
+        messageHolder.setMessage(messageBadhocs.get(position));
     }
 
-    public void setMessages(List<MessageBadhoc> messages) {
-        this.messages = messages;
+    public void setMessageBadhocs(List<MessageBadhoc> messageBadhocs) {
+        this.messageBadhocs = messageBadhocs;
     }
 
     public class MessageViewHolder extends RecyclerView.ViewHolder {

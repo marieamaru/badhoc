@@ -83,7 +83,7 @@ public class BroadcastFragment extends Fragment {
     }
 
     public void addMessage(MessageBadhoc message) {
-        messageBadhocs.add(message);
-        messagesBadhocAdapter.notifyItemInserted(messageBadhocs.size() - 1);
+        messagesBadhocAdapter.addMessage(message);
+        broadcastRecyclerView.scrollToPosition(messagesBadhocAdapter.getItemCount()-1);
     }
 }

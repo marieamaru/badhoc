@@ -100,7 +100,7 @@ public class PrivateChatFragment extends Fragment {
     }
 
     public void setMessageBadhocs(String convId) {
-        messagesBadhocAdapter.setMessages(conversationsMap.get(convId));
+        messagesBadhocAdapter.setMessageBadhocs(conversationsMap.get(convId));
         messagesBadhocAdapter.notifyDataSetChanged();
     }
 

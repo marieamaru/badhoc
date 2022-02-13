@@ -56,6 +56,7 @@ public class NotificationFragment extends Fragment {
 
     public void addNotification(Notification notification) {
         notificationAdapter.addNotification(notification);
+        notificationRecyclerView.scrollToPosition(notificationAdapter.getItemCount()-1);
     }
 
 
