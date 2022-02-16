@@ -26,7 +26,7 @@ public class StateListenerImpl extends StateListener {
 
     @Override
     public void onDeviceConnected(final Device device, Session session) {
-        Log.i(TAG, "onDeviceConnected: " + device.getUserId());
+        Log.i(TAG, "onDeviceConnected: " + device.getUserId() + device.getDeviceAddress());
         // send our information to the Device
         HashMap<String, Object> map = new HashMap<>();
         map.put(Tag.PAYLOAD_DEVICE_NAME.value, mainActivity.getNode().getDeviceName());

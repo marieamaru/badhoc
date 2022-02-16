@@ -32,8 +32,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.BridgefyClient;
+import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.RegistrationListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
@@ -48,10 +50,10 @@ import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.service.LocationService;
-import com.igm.badhoc.service.ServerService;
 
 import java.net.NetworkInterface;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -145,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopService(notificationFragment.getIntentService());
         if (isFinishing())
             Bridgefy.stop();
     }
@@ -206,7 +209,9 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         try {
             List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface nif : all) {
-                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+                if (!nif.getName().equalsIgnoreCase("wlan0")) {
+                    continue;
+                }
                 byte[] macBytes = nif.getHardwareAddress();
                 if (macBytes == null) {
                     return "";
@@ -222,6 +227,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
             }
         } catch (Exception ex) {
             //handle exception
+            return "error2";
         }
         return "error";
     }
@@ -259,34 +265,40 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     private void getLteSignal(Context context) throws SecurityException {
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         String strength = null;
-        List<CellInfo> cellInfos = telephonyManager.getAllCellInfo();   //This will give info of all sims present inside your mobile
-        if(cellInfos != null) {
-            for (int i = 0 ; i < cellInfos.size() ; i++) {
-                if (cellInfos.get(i).isRegistered()) {
-                    if (cellInfos.get(i) instanceof CellInfoWcdma) {
-                        CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfos.get(i);
-                        CellSignalStrengthWcdma cellSignalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
-                        strength = String.valueOf(cellSignalStrengthWcdma.getDbm());
-                    } else if (cellInfos.get(i) instanceof CellInfoGsm) {
-                        CellInfoGsm cellInfogsm = (CellInfoGsm) cellInfos.get(i);
-                        CellSignalStrengthGsm cellSignalStrengthGsm = cellInfogsm.getCellSignalStrength();
-                        strength = String.valueOf(cellSignalStrengthGsm.getDbm());
-                    } else if (cellInfos.get(i) instanceof CellInfoLte) {
-                        CellInfoLte cellInfoLte = (CellInfoLte) cellInfos.get(i);
-                        CellSignalStrengthLte cellSignalStrengthLte = cellInfoLte.getCellSignalStrength();
-                        strength = String.valueOf(cellSignalStrengthLte.getDbm());
-                    } else if (cellInfos.get(i) instanceof CellInfoCdma) {
-                        CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfos.get(i);
-                        CellSignalStrengthCdma cellSignalStrengthCdma = cellInfoCdma.getCellSignalStrength();
-                        strength = String.valueOf(cellSignalStrengthCdma.getDbm());
+        try {
+            List<CellInfo> cellInfos = telephonyManager.getAllCellInfo();   //This will give info of all sims present inside your mobile
+
+            if (cellInfos != null) {
+                for (int i = 0; i < cellInfos.size(); i++) {
+                    if (cellInfos.get(i).isRegistered()) {
+                        if (cellInfos.get(i) instanceof CellInfoWcdma) {
+                            CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfos.get(i);
+                            CellSignalStrengthWcdma cellSignalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
+                            strength = String.valueOf(cellSignalStrengthWcdma.getDbm());
+                        } else if (cellInfos.get(i) instanceof CellInfoGsm) {
+                            CellInfoGsm cellInfogsm = (CellInfoGsm) cellInfos.get(i);
+                            CellSignalStrengthGsm cellSignalStrengthGsm = cellInfogsm.getCellSignalStrength();
+                            strength = String.valueOf(cellSignalStrengthGsm.getDbm());
+                        } else if (cellInfos.get(i) instanceof CellInfoLte) {
+                            CellInfoLte cellInfoLte = (CellInfoLte) cellInfos.get(i);
+                            CellSignalStrengthLte cellSignalStrengthLte = cellInfoLte.getCellSignalStrength();
+                            strength = String.valueOf(cellSignalStrengthLte.getDbm());
+                        } else if (cellInfos.get(i) instanceof CellInfoCdma) {
+                            CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfos.get(i);
+                            CellSignalStrengthCdma cellSignalStrengthCdma = cellInfoCdma.getCellSignalStrength();
+                            strength = String.valueOf(cellSignalStrengthCdma.getDbm());
+                        }
                     }
                 }
             }
+            Log.e(TAG, "lte strengh " + strength);
+            if(strength!=null){
+                this.node.setLteSignal(strength);
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "not allowed to get lte");
         }
-        Log.e(TAG, "lte strengh "+ strength);
-        this.node.setLteSignal(strength);
     }
-
     public void onItemClick(String neighborId) {
         privateChatFragment.setMessageBadhocs(neighborId);
         privateChatFragment.setConversationId(neighborId);
@@ -332,18 +344,32 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     TimerTask timerTask = new TimerTask() {
         @Override
         public void run() {
-            if (isConnectedToInternet() && node.isDominant() == 0 && node.getDominant() == null) {
+            if (isConnectedToInternet() && node.isDominant() == Status.DOMINATED.value && node.getDominant() == null) {
                 node.setIsDominant(Status.DOMINATING.value);
                 broadcastIntentAction(Tag.ACTION_CONNECT.value, "connect");
+                broadcastMessageToNeighbors(Tag.PAYLOAD_DOMINANT.value);
                 Log.e(TAG, "JE SUIS DOMINANT");
             }
-            if (!isConnectedToInternet() && node.isDominant() == 1) {
+            if (!isConnectedToInternet() && node.isDominant() == Status.DOMINATING.value) {
                 node.setIsDominant(Status.DOMINATED.value);
                 broadcastIntentAction(Tag.ACTION_CONNECT.value, "disconnect");
+                broadcastMessageToNeighbors(Tag.PAYLOAD_NO_LONGER_DOMINANT.value);
                 Log.e(TAG, "JE SUIS DOMINE CAR JE N'AI PLUS INTERNET");
             }
         }
     };
+
+    private void broadcastMessageToNeighbors(final String broadcastType) {
+        HashMap<String, Object> content = new HashMap<>();
+        content.put(Tag.PAYLOAD_DEVICE_NAME.value, Build.MANUFACTURER + " " + Build.MODEL);
+        content.put(Tag.PAYLOAD_BROADCAST_TYPE.value, broadcastType);
+
+        Message.Builder builder = new Message.Builder();
+        builder.setContent(content);
+        Log.e(TAG, "JE PREVIENS QUE JE SUIS PLUS DOMINANT");
+        Bridgefy.sendBroadcastMessage(builder.build(),
+                BFEngineProfile.BFConfigProfileLongReach);
+    }
 
     private void determinesIfDominant() {
         timer.scheduleAtFixedRate(timerTask, 0, 10000);

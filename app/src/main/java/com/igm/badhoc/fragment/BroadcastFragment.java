@@ -72,7 +72,7 @@ public class BroadcastFragment extends Fragment {
             HashMap<String, Object> content = new HashMap<>();
             content.put(Tag.PAYLOAD_TEXT.value, messageString);
             content.put(Tag.PAYLOAD_DEVICE_NAME.value, Build.MANUFACTURER + " " + Build.MODEL);
-
+            content.put(Tag.PAYLOAD_BROADCAST_TYPE.value, Tag.PAYLOAD_REGULAR_BROADCAST.value);
             Message.Builder builder = new Message.Builder();
             builder.setContent(content);
 

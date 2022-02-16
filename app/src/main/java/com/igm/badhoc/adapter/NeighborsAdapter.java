@@ -89,7 +89,6 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
             mContentView = view.findViewById(R.id.notification);
             itemView.setOnClickListener(view1 -> {
                 mClickListener.onItemClick(view1, getAdapterPosition());
-                Toast.makeText(view1.getContext(), "CLICK ON NEIGHBOR", Toast.LENGTH_SHORT).show();
             });
         }
 

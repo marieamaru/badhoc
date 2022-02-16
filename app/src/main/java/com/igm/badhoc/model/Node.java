@@ -3,8 +3,9 @@ package com.igm.badhoc.model;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializer;
+import com.google.gson.annotations.JsonAdapter;
+import com.igm.badhoc.serializer.NeighborDominantAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,12 +27,13 @@ public class Node {
 
     private String speed;
 
-    private int isDominant;
+    private int isdominant;
 
     //if the node is dominant
     private HashMap<String, String> dominating;
 
     //if the node is dominated
+    @JsonAdapter(NeighborDominantAdapter.class)
     private Neighbor dominant;
 
     private String lteSignal;
@@ -42,14 +44,15 @@ public class Node {
 
     private String longitude;
 
-    private List<Neighbor> neighbors;
+    private List<Neighbor> neighbours;
 
     private Node(final Builder builder) {
         this.id = builder.id;
         this.deviceName = builder.deviceName;
-        this.isDominant = 0;
-        this.neighbors = new ArrayList<>();
+        this.isdominant = 0;
+        this.neighbours = new ArrayList<>();
         this.dominating = new HashMap<>();
+        this.lteSignal = "-70";
     }
 
     public String getId() {
@@ -61,11 +64,11 @@ public class Node {
     }
 
     public int isDominant() {
-        return isDominant;
+        return isdominant;
     }
 
     public void setIsDominant(int isDominant) {
-        this.isDominant = isDominant;
+        this.isdominant = isDominant;
     }
 
     public Neighbor getDominant() {
@@ -97,6 +100,10 @@ public class Node {
         this.longitude = longitude;
     }
 
+    public List<Neighbor> getNeighbours() {
+        return neighbours;
+    }
+
     public String getLongitude() {
         return longitude;
     }
@@ -106,13 +113,13 @@ public class Node {
     }
 
     public void addToNeighborhood(Neighbor neighbor) {
-        this.neighbors.add(neighbor);
+        this.neighbours.add(neighbor);
     }
 
     public void removeFromNeighborhood(String id) {
-        for(Neighbor n : this.neighbors){
-            if (n.getId().equals(id)){
-                this.neighbors.remove(n);
+        for (Neighbor n : this.neighbours) {
+            if (n.getId().equals(id)) {
+                this.neighbours.remove(n);
             }
         }
     }
@@ -126,7 +133,7 @@ public class Node {
 
     }
 
-    public void removeDominant(){
+    public void removeDominant() {
         this.dominant = null;
     }
 
@@ -164,7 +171,7 @@ public class Node {
 
         JsonSerializer<HashMap<String, Object>> serializer =
                 (src, typeOfSrc, context) -> {
-                    if (src == null || src.isEmpty()) {
+                    if (src == null) {
                         return null;
                     }
                     JsonArray jsonMacAddress = new JsonArray();
@@ -173,21 +180,10 @@ public class Node {
                     }
                     return jsonMacAddress;
                 };
-        JsonSerializer<Neighbor> serializer2 =
-                (src, typeOfSrc, context) -> {
-                    if (src == null) {
-                        return null;
-                    }
-                    JsonObject jsonObject = new JsonObject();
-                    jsonObject.addProperty("macAddress", src.getMacAddress());
-                    jsonObject.addProperty("RSSI", src.getRSSI());
-
-                    return jsonObject;
-                };
         gsonBuilder.registerTypeAdapter(HashMap.class, serializer);
-        gsonBuilder.registerTypeAdapter(Neighbor.class, serializer2);
         return gsonBuilder.create().toJson(this);
     }
+
 
     public static Builder builder(final String id, final String deviceName) {
         return new Builder(id, deviceName);

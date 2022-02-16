@@ -31,7 +31,7 @@ public class LocationService extends Service implements LocationListener {
     private Location location; // location
     private double latitude; // latitude
     private double longitude; // longitude
-    private double speed; //speed
+    private int speed; //speed
 
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
@@ -131,9 +131,9 @@ public class LocationService extends Service implements LocationListener {
         return longitude;
     }
 
-    public double getSpeed() {
+    public int getSpeed() {
         if (location != null) {
-            speed = location.getSpeed();
+            speed = (int) location.getSpeed();
         }
         return speed;
     }

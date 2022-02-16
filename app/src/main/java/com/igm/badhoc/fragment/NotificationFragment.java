@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -78,9 +79,17 @@ public class NotificationFragment extends Fragment {
                     requireActivity().stopService(intentService);
                 } else if (action.equals("connect") && !mainActivity.isServiceRunning(ServerService.class)) {
                     intentService.putExtra(Tag.ACTION_UPDATE_NODE_INFO.value, mainActivity.getNode().nodeKeepAliveMessage());
-                    context.startService(intentService);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(intentService);
+                    } else {
+                        context.startService(intentService);
+                    }
                 }
             }
         }
     };
+
+    public Intent getIntentService() {
+        return intentService;
+    }
 }

@@ -1,9 +1,12 @@
 package com.igm.badhoc.model;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.JsonAdapter;
+import com.igm.badhoc.serializer.NeighborDominatingAdapter;
 
 import java.util.Objects;
 
+@JsonAdapter(NeighborDominatingAdapter.class)
 public class Neighbor {
     private final String id;
     private final String macAddress;
@@ -44,4 +47,6 @@ public class Neighbor {
     public String toString() {
         return new Gson().toJson(this);
     }
+
+
 }

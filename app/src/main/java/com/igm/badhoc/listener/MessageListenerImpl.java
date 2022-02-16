@@ -1,6 +1,9 @@
 package com.igm.badhoc.listener;
 
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.MessageListener;
@@ -15,6 +18,7 @@ import com.igm.badhoc.model.Tag;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 public class MessageListenerImpl extends MessageListener {
 
@@ -37,7 +41,8 @@ public class MessageListenerImpl extends MessageListener {
             mainActivity.getNeighborsFragment().addNeighborToConversations(newNode);
             mainActivity.getPrivateChatFragment().addNeighborToConversationsIfUnknown(newNode.getId());
             mainActivity.getNode().addToNeighborhood(newNeighbor);
-            handleDominatingStatus(senderId, newNeighbor, messageContent);
+            int neighborStatus = Integer.parseInt(getFromMessage(messageContent, Tag.PAYLOAD_IS_DOMINANT.value));
+            handleDominatingStatus(senderId, newNeighbor, neighborStatus);
             handleServer(mainActivity.getNode().isDominant());
             mainActivity.broadcastIntentAction(Tag.ACTION_UPDATE_NODE_INFO.value, mainActivity.getNode().nodeKeepAliveMessage());
             Log.e(TAG, "Peer introduced itself: " + newNode.getMacAddress() + " " + mainActivity.getNode().nodeKeepAliveMessage());
@@ -51,20 +56,37 @@ public class MessageListenerImpl extends MessageListener {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onBroadcastMessageReceived(Message message) {
         // we should not expect to have connected previously to the device that originated
         // the incoming broadcast message, so device information is included in this packet=
         String incomingMsg = (String) message.getContent().get(Tag.PAYLOAD_TEXT.value);
         String deviceName = (String) message.getContent().get(Tag.PAYLOAD_DEVICE_NAME.value);
-        String fromServer = (String) message.getContent().get(Tag.PAYLOAD_FROM_SERVER.value);
-        if(fromServer == null) {
+        String broadcastType = (String) message.getContent().get(Tag.PAYLOAD_BROADCAST_TYPE.value);
+
+        if (broadcastType.equals(Tag.PAYLOAD_REGULAR_BROADCAST.value)) {
             MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMsg);
             messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
             messageBadhoc.setDeviceName(deviceName);
             mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
-        } else {
+        }
+        if (broadcastType.equals(Tag.PAYLOAD_FROM_SERVER.value)) {
+            Log.e(TAG, "received notif from my dominant");
             mainActivity.getNotificationFragment().addNotification(new Notification(incomingMsg));
+        }
+        if (broadcastType.equals(Tag.PAYLOAD_NO_LONGER_DOMINANT.value)) {
+            Log.e(TAG, "received that my dominant is no longer dominant");
+            mainActivity.getNode().setDominant(null);
+        }
+        if (broadcastType.equals(Tag.PAYLOAD_DOMINANT.value)) {
+            Optional<Neighbor> neighbor = mainActivity.getNode().getNeighbours().stream()
+                    .filter(neighbor1 -> neighbor1.getId().equals(message.getSenderId())).findFirst();
+            if (mainActivity.getNode().isDominant() == Status.DOMINATED.value) {
+                neighbor.ifPresent(value -> mainActivity.getNode().setDominant(value));
+            } else {
+                neighbor.ifPresent(value -> handleDominatingStatus(message.getSenderId(), value, Status.DOMINATING.value));
+            }
         }
         Log.d(TAG, "Incoming broadcast message: " + incomingMsg);
     }
@@ -80,9 +102,8 @@ public class MessageListenerImpl extends MessageListener {
         return node;
     }
 
-    private void handleDominatingStatus(String senderId, Neighbor neighbor, HashMap<String, String> messageContent) {
+    private void handleDominatingStatus(String senderId, Neighbor neighbor, int neighborStatus) {
         Node node = mainActivity.getNode();
-        int neighborStatus = Integer.parseInt(getFromMessage(messageContent, Tag.PAYLOAD_IS_DOMINANT.value));
         switch (node.isDominant()) {
             case 0:
                 if ((neighborStatus) == Status.DOMINATING.value) {
@@ -103,7 +124,6 @@ public class MessageListenerImpl extends MessageListener {
                         node.clearDominatingList();
                         Log.e(TAG, "JE NE SUIS PLUS DOMINANT CAR MON RSSI EST PETIT, MOI : " + node.getRssi() + " mon voisin : " + neighbor.getRSSI());
                     } else {
-                        node.setDominant(null);
                         node.addToDominating(senderId, neighbor.getMacAddress());
                         Log.e(TAG, "JE SUIS DOMINANT CAR MON RSSI EST MEILLEUR, MOI : " + node.getRssi() + " mon voisin : " + neighbor.getRSSI());
                     }

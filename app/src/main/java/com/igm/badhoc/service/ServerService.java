@@ -1,15 +1,20 @@
 package com.igm.badhoc.service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
@@ -56,7 +61,7 @@ public class ServerService extends Service {
     private final Intent intent = new Intent(Tag.INTENT_SERVER_SERVICE.value);
     private Timer timer;
     private String messageJson = "{}";
-    private final String subscribeTopic = "#";
+    private final String subscribeTopic = "notifs";
     private final String publishTopic = "nodekeepalive";
     private final String url = "ssl://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
     private String messageReceived;
@@ -75,6 +80,25 @@ public class ServerService extends Service {
         client = new MqttAndroidClient(getApplicationContext(), url,
                 MqttClient.generateClientId());
         doReconnect = true;
+        if (Build.VERSION.SDK_INT >= 26) {
+            String NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
+            String channelName = "My Background Service";
+            NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
+            chan.setLightColor(Color.BLUE);
+            chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            assert manager != null;
+            manager.createNotificationChannel(chan);
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+            Notification notification = notificationBuilder.setOngoing(true)
+                    .setSmallIcon(R.drawable.badhoc)
+                    .setContentTitle("App is running in background")
+                    .setPriority(NotificationManager.IMPORTANCE_MIN)
+                    .setCategory(Notification.CATEGORY_SERVICE)
+                    .build();
+            startForeground(1, notification);
+        }
         connect();
         initializeTimerForPublish();
     }
@@ -89,7 +113,7 @@ public class ServerService extends Service {
         try {
             client.disconnect();
             Log.e(TAG, "server disconnected after destroy service");
-        } catch (MqttException e) {
+        } catch (MqttException | NullPointerException e) {
             e.printStackTrace();
             Log.e(TAG, "error server disconnect");
         }
@@ -105,7 +129,7 @@ public class ServerService extends Service {
         @Override
         public void connectionLost(Throwable cause) {
             Log.e(TAG, "connection lost");
-            if(doReconnect){
+            if (doReconnect) {
                 connect();
             }
             sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, "Notifications from dominant"));
@@ -137,6 +161,7 @@ public class ServerService extends Service {
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
             // Something went wrong e.g. connection timeout or firewall problems
+            connect();
             Log.e(TAG, "not connected to server " + exception);
         }
     };
@@ -150,7 +175,6 @@ public class ServerService extends Service {
         try {
             options.setUserName("uge");
             options.setPassword("badzak".toCharArray());
-            //options.setAutomaticReconnect(true);
             options.setKeepAliveInterval(10);
             SSLSocketFactory sslSocketFactory = setCertificate(caCrtFile, crtFile, keyFile);
             options.setSocketFactory(sslSocketFactory);
@@ -287,8 +311,8 @@ public class ServerService extends Service {
         HashMap<String, Object> content = new HashMap<>();
         content.put(Tag.PAYLOAD_TEXT.value, messageFromServer);
         content.put(Tag.PAYLOAD_DEVICE_NAME.value, Build.MANUFACTURER + " " + Build.MODEL);
-        content.put(Tag.PAYLOAD_FROM_SERVER.value, "true");
-
+        content.put(Tag.PAYLOAD_BROADCAST_TYPE.value, Tag.PAYLOAD_FROM_SERVER.value);
+        Log.e(TAG, "sending to my broadcast the notif");
         Message.Builder builder = new Message.Builder();
         builder.setContent(content);
 

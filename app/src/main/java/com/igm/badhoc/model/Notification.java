@@ -8,7 +8,9 @@ public class Notification {
     private final String text;
 
     public Notification(final String text) {
-        this.date = Calendar.getInstance().getTime().toString();
+        Calendar cal = Calendar.getInstance();
+        cal.clear(Calendar.ZONE_OFFSET);
+        this.date = cal.getTime().toString();
         this.text = text;
     }
 
