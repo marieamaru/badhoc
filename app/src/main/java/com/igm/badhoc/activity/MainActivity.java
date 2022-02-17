@@ -366,7 +366,6 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
         Message.Builder builder = new Message.Builder();
         builder.setContent(content);
-        Log.e(TAG, "JE PREVIENS QUE JE SUIS PLUS DOMINANT");
         Bridgefy.sendBroadcastMessage(builder.build(),
                 BFEngineProfile.BFConfigProfileLongReach);
     }

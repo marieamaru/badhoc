@@ -56,7 +56,6 @@ public class MessageListenerImpl extends MessageListener {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onBroadcastMessageReceived(Message message) {
         // we should not expect to have connected previously to the device that originated
@@ -80,13 +79,17 @@ public class MessageListenerImpl extends MessageListener {
             mainActivity.getNode().setDominant(null);
         }
         if (broadcastType.equals(Tag.PAYLOAD_DOMINANT.value)) {
-            Optional<Neighbor> neighbor = mainActivity.getNode().getNeighbours().stream()
-                    .filter(neighbor1 -> neighbor1.getId().equals(message.getSenderId())).findFirst();
-            if (mainActivity.getNode().isDominant() == Status.DOMINATED.value) {
-                neighbor.ifPresent(value -> mainActivity.getNode().setDominant(value));
-            } else {
-                neighbor.ifPresent(value -> handleDominatingStatus(message.getSenderId(), value, Status.DOMINATING.value));
+            for(Neighbor n : mainActivity.getNode().getNeighbours()){
+                if(n.getId().equals(message.getSenderId())){
+                    if (mainActivity.getNode().isDominant() == Status.DOMINATED.value) {
+                        mainActivity.getNode().setDominant(n);
+                    } else {
+                        handleDominatingStatus(message.getSenderId(), n, Status.DOMINATING.value);
+                    }
+                    break;
+                }
             }
+
         }
         Log.d(TAG, "Incoming broadcast message: " + incomingMsg);
     }
