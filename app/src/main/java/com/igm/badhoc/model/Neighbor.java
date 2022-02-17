@@ -1,117 +1,46 @@
 package com.igm.badhoc.model;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.JsonAdapter;
+import com.igm.badhoc.serializer.NeighborDominatingAdapter;
 
-import java.util.List;
+import java.util.Objects;
 
+@JsonAdapter(NeighborDominatingAdapter.class)
 public class Neighbor {
-
-    private final String deviceName;
-
     private final String id;
+    private final String macAddress;
+    private final float RSSI;
 
-    private int type;
-
-    private boolean isNearby;
-
-    private int speed;
-
-    private float rssi;
-
-    private int status;
-
-    private String macAddress;
-
-    private long latitude;
-
-    private long longitude;
-
-    private List<Neighbor> neighbourNodes;
-
-    private Neighbor(final Builder builder) {
-        this.id = builder.id;
-        this.deviceName = builder.deviceName;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public int getSpeed() {
-        return speed;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
+    public Neighbor(final String id, final String macAddress, final float RSSI) {
+        this.id = id;
+        this.macAddress = macAddress;
+        this.RSSI = RSSI;
     }
 
     public String getMacAddress() {
         return macAddress;
     }
 
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
+    public float getRSSI() {
+        return RSSI;
     }
 
-    public int getType() {
-        return type;
+    public String getId() {
+        return id;
     }
 
-    public void setType(int type) {
-        this.type = type;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Neighbor neighbor = (Neighbor) o;
+        return Float.compare(neighbor.RSSI, RSSI) == 0 && Objects.equals(macAddress, neighbor.macAddress);
     }
 
-    public long getLatitude() {
-        return latitude;
-    }
-
-    public void setPosition(long latitude, long longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
-
-    public long getLongitude() {
-        return longitude;
-    }
-
-    public List<Neighbor> getNeighbourNodes() {
-        return neighbourNodes;
-    }
-
-    public void setNeighbourNodes(List<Neighbor> neighbourNodes) {
-        this.neighbourNodes = neighbourNodes;
-    }
-
-    public String getDeviceName() {
-        return deviceName;
-    }
-
-    public boolean isNearby() {
-        return isNearby;
-    }
-
-    public void setNearby(boolean nearby) {
-        isNearby = nearby;
-    }
-
-    public void setSpeed(int speed) {
-        this.speed = speed;
-    }
-
-    public float getRssi() {
-        return rssi;
-    }
-
-    public void setRssi(float rssi) {
-        this.rssi = rssi;
-    }
-
-    public static Neighbor create(String json) {
-        return new Gson().fromJson(json, Neighbor.class);
+    @Override
+    public int hashCode() {
+        return Objects.hash(macAddress, RSSI);
     }
 
     @Override
@@ -119,24 +48,5 @@ public class Neighbor {
         return new Gson().toJson(this);
     }
 
-    public static Builder builder(final String id, final String deviceName) {
-        return new Builder(id, deviceName);
-    }
 
-    public static class Builder {
-
-        private final String id;
-
-        private final String deviceName;
-
-        public Builder(final String id, final String deviceName) {
-            this.id = id;
-            this.deviceName = deviceName;
-        }
-
-        public Neighbor build() {
-            return new Neighbor(this);
-        }
-
-    }
 }

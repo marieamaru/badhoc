@@ -14,18 +14,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bridgefy.sdk.client.Device;
 import com.igm.badhoc.R;
 import com.igm.badhoc.listener.ItemClickListener;
-import com.igm.badhoc.model.Neighbor;
+import com.igm.badhoc.model.Node;
 
 import java.io.Serializable;
 import java.util.List;
 
 public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.ViewHolder> implements Serializable {
 
-    private final List<Neighbor> neighbors;
+    private final List<Node> neighbors;
     private ItemClickListener mClickListener;
 
-    public NeighborsAdapter(List<Neighbor> neighbors) {
-        this.neighbors = neighbors;
+    public NeighborsAdapter(List<Node> nodes) {
+        this.neighbors = nodes;
     }
 
     @Override
@@ -33,13 +33,13 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         return neighbors.size();
     }
 
-    public void addNeighbor(Neighbor neighbor) {
-        int position = getNeighborPosition(neighbor.getId());
+    public void addNeighbor(Node node) {
+        int position = getNeighborPosition(node.getId());
         if (position > -1) {
-            this.neighbors.set(position, neighbor);
+            this.neighbors.set(position, node);
             notifyItemChanged(position);
         } else {
-            this.neighbors.add(neighbor);
+            this.neighbors.add(node);
             notifyItemInserted(this.neighbors.size() - 1);
         }
     }
@@ -47,9 +47,9 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
     public void removeNeighbor(Device lostNeighbor) {
         int position = getNeighborPosition(lostNeighbor.getUserId());
         if (position > -1) {
-            Neighbor neighbor = this.neighbors.get(position);
-            neighbor.setNearby(false);
-            this.neighbors.set(position, neighbor);
+            Node node = this.neighbors.get(position);
+            node.setNearby(false);
+            this.neighbors.set(position, node);
             notifyItemChanged(position);
         }
     }
@@ -86,30 +86,15 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         ViewHolder(View view) {
             super(view);
             mAvatar = view.findViewById(R.id.peerAvatar);
-            mContentView = view.findViewById(R.id.peerName);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mClickListener.onItemClick(view, getAdapterPosition());
-                    Toast.makeText(view.getContext(), "CLICK ON NEIGHBOR", Toast.LENGTH_SHORT).show();
-                }
+            mContentView = view.findViewById(R.id.notification);
+            itemView.setOnClickListener(view1 -> {
+                mClickListener.onItemClick(view1, getAdapterPosition());
             });
         }
 
-        void setNeighbor(Neighbor neighbor) {
-            /*
-            switch (neighbor.getDeviceType()) {
-                case ANDROID:
-                    this.mContentView.setText(neighbor.getDeviceName() + " (android)");
-                    break;
-
-                case IPHONE:
-                    this.mContentView.setText(neighbor.getDeviceName() + " (iPhone)");
-                    break;
-            }
-             */
-            this.mContentView.setText(neighbor.getDeviceName());
-            if (neighbor.isNearby()) {
+        void setNeighbor(Node node) {
+            this.mContentView.setText(node.getDeviceName());
+            if (node.isNearby()) {
                 this.mAvatar.setImageResource(R.drawable.user_nearby);
                 this.mContentView.setTextColor(Color.BLACK);
             } else {

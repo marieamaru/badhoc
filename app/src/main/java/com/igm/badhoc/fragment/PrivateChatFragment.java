@@ -1,6 +1,7 @@
 package com.igm.badhoc.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
 import com.igm.badhoc.R;
+import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
@@ -27,6 +29,7 @@ import java.util.Map;
 
 public class PrivateChatFragment extends Fragment {
 
+    private final String TAG = "PrivateChatFragment";
     private RecyclerView privateChatRecyclerView;
     private MessagesBadhocAdapter messagesBadhocAdapter;
     Map<String, List<MessageBadhoc>> conversationsMap;
@@ -49,16 +52,14 @@ public class PrivateChatFragment extends Fragment {
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
         btnSend = view.findViewById(R.id.btnSend);
+        privateChatRecyclerView = view.findViewById(R.id.message_list);
+
+        messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
+        conversationsMap = new HashMap<>();
 
         btnSend.setOnClickListener(this::onMessageSend);
-        // recover our Neighbor object
-        //conversationName = this.getArguments().getString(IntentTag.INTENT_EXTRA_NAME.value);
-        //conversationId = this.getArguments().getString(IntentTag.INTENT_EXTRA_UUID.value);
-        privateChatRecyclerView = view.findViewById(R.id.message_list);
         privateChatRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
         privateChatRecyclerView.setAdapter(messagesBadhocAdapter);
-        conversationsMap = new HashMap<>();
 
         return view;
     }
@@ -67,7 +68,9 @@ public class PrivateChatFragment extends Fragment {
         // close keyboard after send
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
         // get the message and push it to the views
+        MainActivity mainActivity = (MainActivity) getActivity();
         String messageString = txtMessage.getText().toString().trim();
+        Log.e(TAG, mainActivity.getNode().nodeKeepAliveMessage());
         if (messageString.length() > 0) {
             // update the views
             txtMessage.setText("");
@@ -97,11 +100,11 @@ public class PrivateChatFragment extends Fragment {
     }
 
     public void setMessageBadhocs(String convId) {
-        messagesBadhocAdapter.setMessages(conversationsMap.get(convId));
+        messagesBadhocAdapter.setMessageBadhocs(conversationsMap.get(convId));
         messagesBadhocAdapter.notifyDataSetChanged();
     }
 
-    public void addNeighborIfUnknown(String senderId) {
+    public void addNeighborToConversationsIfUnknown(String senderId) {
         if (!this.conversationsMap.containsKey(senderId)) {
             this.conversationsMap.put(senderId, new ArrayList<>());
         }

@@ -26,19 +26,29 @@ public class StateListenerImpl extends StateListener {
 
     @Override
     public void onDeviceConnected(final Device device, Session session) {
-        Log.i(TAG, "onDeviceConnected: " + device.getUserId());
+        Log.i(TAG, "onDeviceConnected: " + device.getUserId() + device.getDeviceAddress());
         // send our information to the Device
         HashMap<String, Object> map = new HashMap<>();
         map.put(Tag.PAYLOAD_DEVICE_NAME.value, mainActivity.getNode().getDeviceName());
         map.put(Tag.PAYLOAD_MAC_ADDRESS.value, mainActivity.getNode().getMacAddress());
+        map.put(Tag.PAYLOAD_RSSI.value, String.valueOf(mainActivity.getNode().getRssi()));
+        map.put(Tag.PAYLOAD_IS_DOMINANT.value, String.valueOf(mainActivity.getNode().isDominant()));
         mainActivity.runOnUiThread(() -> Toast.makeText(mainActivity, "device found.", Toast.LENGTH_LONG).show());
         device.sendMessage(map);
     }
 
     @Override
     public void onDeviceLost(Device device) {
-        Log.w(TAG, "onDeviceLost: " + device.getUserId());
-        mainActivity.getNeighborsFragment().removeNeighbor(device);
+        String lostDevice = device.getUserId();
+        mainActivity.getNeighborsFragment().removeNeighborFromConversations(device);
+        mainActivity.getNode().removeFromNeighborhood(lostDevice);
+        mainActivity.getNode().removeFromDominating(lostDevice);
+        if(mainActivity.getNode().getDominant() != null){
+            if(mainActivity.getNode().getDominant().getId().equals(lostDevice)){
+                mainActivity.getNode().removeDominant();
+            }
+        }
+        Log.e(TAG, "onDeviceLost: " + lostDevice + " \n" + mainActivity.getNode().nodeKeepAliveMessage());
     }
 
     @Override

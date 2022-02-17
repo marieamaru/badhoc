@@ -37,11 +37,6 @@ public class MessageBadhoc implements Serializable {
         this.deviceName = deviceName;
     }
 
-
-    public static MessageBadhoc create(String json) {
-        return new Gson().fromJson(json, MessageBadhoc.class);
-    }
-
     @Override
     public String toString() {
         return new Gson().toJson(this);
