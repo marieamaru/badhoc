@@ -19,17 +19,11 @@ import com.igm.badhoc.model.Node;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeighborsFragment extends Fragment implements ItemClickListener {
+public class AroundMeFragment extends Fragment implements ItemClickListener {
 
     private RecyclerView neighborsRecyclerView;
     private NeighborsAdapter neighborsAdapter;
     private List<Node> neighbors;
-
-    public static NeighborsFragment newInstance(Bundle bundle) {
-        NeighborsFragment fragment = new NeighborsFragment();
-        fragment.setArguments(bundle);
-        return fragment;
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

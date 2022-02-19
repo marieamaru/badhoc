@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class BroadcastFragment extends Fragment {
+public class BroadcastChatFragment extends Fragment {
 
     private RecyclerView broadcastRecyclerView;
     private MessagesBadhocAdapter messagesBadhocAdapter;
@@ -34,12 +34,6 @@ public class BroadcastFragment extends Fragment {
 
     EditText txtMessage;
     ImageView btnSend;
-
-    public static BroadcastFragment newInstance(Bundle bundle) {
-        BroadcastFragment fragment = new BroadcastFragment();
-        fragment.setArguments(bundle);
-        return fragment;
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -84,6 +78,6 @@ public class BroadcastFragment extends Fragment {
 
     public void addMessage(MessageBadhoc message) {
         messagesBadhocAdapter.addMessage(message);
-        broadcastRecyclerView.scrollToPosition(messagesBadhocAdapter.getItemCount()-1);
+        broadcastRecyclerView.scrollToPosition(messagesBadhocAdapter.getItemCount() - 1);
     }
 }

@@ -80,6 +80,12 @@ public class ServerService extends Service {
         client = new MqttAndroidClient(getApplicationContext(), url,
                 MqttClient.generateClientId());
         doReconnect = true;
+        handleApiAbove26();
+        connect();
+        initializeTimerForPublish();
+    }
+
+    private void handleApiAbove26() {
         if (Build.VERSION.SDK_INT >= 26) {
             String NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
             String channelName = "My Background Service";
@@ -99,8 +105,6 @@ public class ServerService extends Service {
                     .build();
             startForeground(1, notification);
         }
-        connect();
-        initializeTimerForPublish();
     }
 
     @Override
@@ -109,10 +113,10 @@ public class ServerService extends Service {
         doReconnect = false;
         timer.cancel();
         unregisterReceiver(receiver);
-        sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, "Notifications from dominant"));
+        sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_NOT_DOMINANT.value));
         try {
             client.disconnect();
-            Log.e(TAG, "server disconnected after destroy service");
+            Log.i(TAG, "Destroy service");
         } catch (MqttException | NullPointerException e) {
             e.printStackTrace();
             Log.e(TAG, "error server disconnect");
@@ -128,18 +132,18 @@ public class ServerService extends Service {
     MqttCallback mqttCallback = new MqttCallback() {
         @Override
         public void connectionLost(Throwable cause) {
-            Log.e(TAG, "connection lost");
+            Log.e(TAG, "Connection lost");
             if (doReconnect) {
                 connect();
             }
-            sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, "Notifications from dominant"));
+            sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_NOT_DOMINANT.value));
         }
 
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             Log.i(TAG, "topic: " + topic + ", msg: " + new String(message.getPayload()));
             messageReceived = new String(message.getPayload());
-            sendBroadcast(intent.putExtra(Tag.ACTION_MESSAGE_RECEIVED.value, messageReceived));
+            sendBroadcast(intent.putExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value, messageReceived));
             broadcastMessageFromServer(messageReceived);
         }
 
@@ -153,9 +157,9 @@ public class ServerService extends Service {
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
             // We are connected
-            Log.e(TAG, "connected to server " + client.isConnected());
+            Log.i(TAG, "Connected to server " + client.isConnected());
             subscribeToTopic(subscribeTopic);
-            sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, "Notifications from server"));
+            sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_DOMINANT.value));
         }
 
         @Override
@@ -193,9 +197,8 @@ public class ServerService extends Service {
     }
 
     public void publishMessage(final String publishTopic, final String messageJson) {
-        Log.e(TAG, "in publish " + messageJson + client.isConnected());
         if (client.isConnected() && !messageJson.equals("{}")) {
-            Log.e(TAG, "in publish and message is updated " + messageJson);
+            Log.i(TAG, "in publish and message is updated " + messageJson);
             try {
                 MqttMessage message = new MqttMessage();
                 message.setPayload(messageJson.getBytes());
@@ -218,13 +221,12 @@ public class ServerService extends Service {
     }
 
     public void subscribeToTopic(final String subTopic) {
-        Log.e(TAG, "in subscribe");
         if (client.isConnected()) {
             try {
                 client.subscribe(subTopic, 0, null, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.e(TAG, "Successfully subscribed to topic " + subTopic);
+                        Log.i(TAG, "Successfully subscribed to topic " + subTopic);
                     }
 
                     @Override
@@ -241,7 +243,6 @@ public class ServerService extends Service {
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            Log.e(TAG, "in receiver of service");
             messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
         }
     };
@@ -312,12 +313,12 @@ public class ServerService extends Service {
         content.put(Tag.PAYLOAD_TEXT.value, messageFromServer);
         content.put(Tag.PAYLOAD_DEVICE_NAME.value, Build.MANUFACTURER + " " + Build.MODEL);
         content.put(Tag.PAYLOAD_BROADCAST_TYPE.value, Tag.PAYLOAD_FROM_SERVER.value);
-        Log.e(TAG, "sending to my broadcast the notif");
         Message.Builder builder = new Message.Builder();
         builder.setContent(content);
 
         Bridgefy.sendBroadcastMessage(builder.build(),
                 BFEngineProfile.BFConfigProfileLongReach);
     }
+
 
 }

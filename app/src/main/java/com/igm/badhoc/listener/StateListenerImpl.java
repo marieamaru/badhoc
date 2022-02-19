@@ -26,7 +26,7 @@ public class StateListenerImpl extends StateListener {
 
     @Override
     public void onDeviceConnected(final Device device, Session session) {
-        Log.i(TAG, "onDeviceConnected: " + device.getUserId() + device.getDeviceAddress());
+        Log.e(TAG, "onDeviceConnected: " + device.getUserId() + device.getDeviceAddress());
         // send our information to the Device
         HashMap<String, Object> map = new HashMap<>();
         map.put(Tag.PAYLOAD_DEVICE_NAME.value, mainActivity.getNode().getDeviceName());
@@ -40,15 +40,15 @@ public class StateListenerImpl extends StateListener {
     @Override
     public void onDeviceLost(Device device) {
         String lostDevice = device.getUserId();
-        mainActivity.getNeighborsFragment().removeNeighborFromConversations(device);
+        mainActivity.getAroundMeFragment().removeNeighborFromConversations(device);
         mainActivity.getNode().removeFromNeighborhood(lostDevice);
         mainActivity.getNode().removeFromDominating(lostDevice);
-        if(mainActivity.getNode().getDominant() != null){
-            if(mainActivity.getNode().getDominant().getId().equals(lostDevice)){
+        if (mainActivity.getNode().getDominant() != null) {
+            if (mainActivity.getNode().getDominant().getId().equals(lostDevice)) {
                 mainActivity.getNode().removeDominant();
             }
         }
-        Log.e(TAG, "onDeviceLost: " + lostDevice + " \n" + mainActivity.getNode().nodeKeepAliveMessage());
+        Log.i(TAG, "onDeviceLost: " + lostDevice + " \n" + mainActivity.getNode().nodeKeepAliveMessage());
     }
 
     @Override
@@ -73,7 +73,7 @@ public class StateListenerImpl extends StateListener {
     @Override
     public void onStarted() {
         super.onStarted();
-        Log.e(TAG, "onStarted: Bridgefy started");
+        Log.i(TAG, "onStarted: Bridgefy started");
         mainActivity.runOnUiThread(() -> Toast.makeText(mainActivity, "Bridgefy started.", Toast.LENGTH_LONG).show());
     }
 

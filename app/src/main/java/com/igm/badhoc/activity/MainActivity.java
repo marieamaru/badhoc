@@ -40,8 +40,8 @@ import com.bridgefy.sdk.client.RegistrationListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.igm.badhoc.R;
-import com.igm.badhoc.fragment.BroadcastFragment;
-import com.igm.badhoc.fragment.NeighborsFragment;
+import com.igm.badhoc.fragment.AroundMeFragment;
+import com.igm.badhoc.fragment.BroadcastChatFragment;
 import com.igm.badhoc.fragment.NotificationFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
 import com.igm.badhoc.listener.MessageListenerImpl;
@@ -57,19 +57,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
 
     private final String TAG = "MainActivity";
 
     private Node node;
-    private BroadcastFragment broadcastFragment;
-    private NeighborsFragment neighborsFragment;
+    private BroadcastChatFragment broadcastChatFragment;
+    private AroundMeFragment aroundMeFragment;
     private PrivateChatFragment privateChatFragment;
     private NotificationFragment notificationFragment;
-    private Fragment currentFragment;
     private FragmentManager fragmentManager;
-    private Bundle bundle;
+    private Fragment currentFragment;
+
     private boolean isConnectedToInternet;
     private StateListenerImpl stateListener;
     private MessageListenerImpl messageListener;
@@ -82,17 +83,16 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        bundle = new Bundle();
         fragmentManager = getSupportFragmentManager();
-        broadcastFragment = BroadcastFragment.newInstance(bundle);
-        neighborsFragment = NeighborsFragment.newInstance(bundle);
-        privateChatFragment = PrivateChatFragment.newInstance(bundle);
+        broadcastChatFragment = new BroadcastChatFragment();
+        aroundMeFragment = new AroundMeFragment();
+        privateChatFragment = new PrivateChatFragment();
         notificationFragment = new NotificationFragment();
 
-        currentFragment = neighborsFragment;
+        currentFragment = aroundMeFragment;
 
-        fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastFragment, TAG).hide(broadcastFragment).commit();
-        fragmentManager.beginTransaction().add(R.id.fl_fragment, neighborsFragment, TAG).commit();
+        fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastChatFragment, TAG).hide(broadcastChatFragment).commit();
+        fragmentManager.beginTransaction().add(R.id.fl_fragment, aroundMeFragment, TAG).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, privateChatFragment, TAG).hide(privateChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, notificationFragment, TAG).hide(notificationFragment).commit();
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
@@ -108,10 +108,10 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_broadcast:
-                loadFragment(broadcastFragment);
+                loadFragment(broadcastChatFragment);
                 return true;
             case R.id.action_private_chat:
-                loadFragment(neighborsFragment);
+                loadFragment(aroundMeFragment);
                 return true;
             case R.id.action_server:
                 loadFragment(notificationFragment);
@@ -141,12 +141,13 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     };
 
     private void initializeBridgefy() {
-        Bridgefy.initialize(getApplicationContext(), getResources().getString(R.string.api_key), registrationListener);
+        Bridgefy.initialize(getApplicationContext(), registrationListener);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(notificationFragment.getReceiver());
         stopService(notificationFragment.getIntentService());
         if (isFinishing())
             Bridgefy.stop();
@@ -205,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         Log.e(TAG, "mac : " + node.getMacAddress() + " position : " + node.getLatitude() + " " + node.getLongitude() + " rssi " + node.getRssi());
     }
 
-    private String getMacAddress() {
+    private String getRealMacAddress() {
         try {
             List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface nif : all) {
@@ -227,9 +228,26 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
             }
         } catch (Exception ex) {
             //handle exception
-            return "error2";
+            return "";
         }
-        return "error";
+        return "";
+    }
+
+    private String generateRandomMacAddress(){
+        final String uniqueID = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+        final StringBuilder sb = new StringBuilder(uniqueID);
+        for (int i = 2; i < 30; i = i + 3) {
+            sb.insert(i, ":");
+        }
+        return sb.substring(0, 17);
+    }
+
+    private String getMacAddress(){
+        String res = getRealMacAddress();
+        if(res.isEmpty()){
+            res = generateRandomMacAddress();
+        }
+        return res;
     }
 
     public void getLocation() {
@@ -237,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         if (locationService.canGetLocation()) {
             node.setPosition(String.valueOf(locationService.getLongitude()), String.valueOf(locationService.getLatitude()));
             node.setSpeed(String.valueOf(locationService.getSpeed()));
+            Log.e(TAG, "latitude: " + node.getLatitude() + "longitude" + node.getLongitude());
         } else {
             Log.e(TAG, "cannot get location");
         }
@@ -291,14 +310,14 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
                     }
                 }
             }
-            Log.e(TAG, "lte strengh " + strength);
-            if(strength!=null){
+            if (strength != null) {
                 this.node.setLteSignal(strength);
             }
         } catch (SecurityException e) {
             Log.e(TAG, "not allowed to get lte");
         }
     }
+
     public void onItemClick(String neighborId) {
         privateChatFragment.setMessageBadhocs(neighborId);
         privateChatFragment.setConversationId(neighborId);
@@ -313,22 +332,21 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         return notificationFragment;
     }
 
-    public NeighborsFragment getNeighborsFragment() {
-        return neighborsFragment;
+    public AroundMeFragment getAroundMeFragment() {
+        return aroundMeFragment;
     }
 
     public PrivateChatFragment getPrivateChatFragment() {
         return privateChatFragment;
     }
 
-    public BroadcastFragment getBroadcastFragment() {
-        return broadcastFragment;
+    public BroadcastChatFragment getBroadcastFragment() {
+        return broadcastChatFragment;
     }
 
     public void broadcastIntentAction(String action, String content) {
         this.intent.putExtra(action, content);
         sendBroadcast(this.intent);
-        Log.e(TAG, "broadcastIntentAction in main activity");
     }
 
     public boolean isServiceRunning(Class<?> serviceClass) {
@@ -341,24 +359,6 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         return false;
     }
 
-    TimerTask timerTask = new TimerTask() {
-        @Override
-        public void run() {
-            if (isConnectedToInternet() && node.isDominant() == Status.DOMINATED.value && node.getDominant() == null) {
-                node.setIsDominant(Status.DOMINATING.value);
-                broadcastIntentAction(Tag.ACTION_CONNECT.value, "connect");
-                broadcastMessageToNeighbors(Tag.PAYLOAD_DOMINANT.value);
-                Log.e(TAG, "JE SUIS DOMINANT");
-            }
-            if (!isConnectedToInternet() && node.isDominant() == Status.DOMINATING.value) {
-                node.setIsDominant(Status.DOMINATED.value);
-                broadcastIntentAction(Tag.ACTION_CONNECT.value, "disconnect");
-                broadcastMessageToNeighbors(Tag.PAYLOAD_NO_LONGER_DOMINANT.value);
-                Log.e(TAG, "JE SUIS DOMINE CAR JE N'AI PLUS INTERNET");
-            }
-        }
-    };
-
     private void broadcastMessageToNeighbors(final String broadcastType) {
         HashMap<String, Object> content = new HashMap<>();
         content.put(Tag.PAYLOAD_DEVICE_NAME.value, Build.MANUFACTURER + " " + Build.MODEL);
@@ -369,6 +369,24 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         Bridgefy.sendBroadcastMessage(builder.build(),
                 BFEngineProfile.BFConfigProfileLongReach);
     }
+
+    TimerTask timerTask = new TimerTask() {
+        @Override
+        public void run() {
+            if (isConnectedToInternet() && node.isDominant() == Status.DOMINATED.value && node.getDominant() == null) {
+                node.setIsDominant(Status.DOMINATING.value);
+                broadcastIntentAction(Tag.ACTION_CONNECT.value, "connect");
+                broadcastMessageToNeighbors(Tag.PAYLOAD_POTENTIAL_DOMINANT.value);
+                Log.i(TAG, "JE SUIS DOMINANT");
+            }
+            if (!isConnectedToInternet() && node.isDominant() == Status.DOMINATING.value) {
+                node.setIsDominant(Status.DOMINATED.value);
+                broadcastIntentAction(Tag.ACTION_CONNECT.value, "disconnect");
+                broadcastMessageToNeighbors(Tag.PAYLOAD_NO_LONGER_DOMINANT.value);
+                Log.i(TAG, "JE SUIS DOMINE CAR JE N'AI PLUS INTERNET");
+            }
+        }
+    };
 
     private void determinesIfDominant() {
         timer.scheduleAtFixedRate(timerTask, 0, 10000);

@@ -1,9 +1,6 @@
 package com.igm.badhoc.listener;
 
-import android.os.Build;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
 
 import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.MessageListener;
@@ -18,7 +15,6 @@ import com.igm.badhoc.model.Tag;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
-import java.util.Optional;
 
 public class MessageListenerImpl extends MessageListener {
 
@@ -38,14 +34,14 @@ public class MessageListenerImpl extends MessageListener {
         if (messageContent.get(Tag.PAYLOAD_DEVICE_NAME.value) != null) {
             Node newNode = registerNeighborFromHandshake(senderId, messageContent);
             Neighbor newNeighbor = new Neighbor(senderId, newNode.getMacAddress(), newNode.getRssi());
-            mainActivity.getNeighborsFragment().addNeighborToConversations(newNode);
+            mainActivity.getAroundMeFragment().addNeighborToConversations(newNode);
             mainActivity.getPrivateChatFragment().addNeighborToConversationsIfUnknown(newNode.getId());
             mainActivity.getNode().addToNeighborhood(newNeighbor);
             int neighborStatus = Integer.parseInt(getFromMessage(messageContent, Tag.PAYLOAD_IS_DOMINANT.value));
             handleDominatingStatus(senderId, newNeighbor, neighborStatus);
             handleServer(mainActivity.getNode().isDominant());
             mainActivity.broadcastIntentAction(Tag.ACTION_UPDATE_NODE_INFO.value, mainActivity.getNode().nodeKeepAliveMessage());
-            Log.e(TAG, "Peer introduced itself: " + newNode.getMacAddress() + " " + mainActivity.getNode().nodeKeepAliveMessage());
+            Log.i(TAG, "Peer introduced itself: " + newNode.getMacAddress() + " " + mainActivity.getNode().nodeKeepAliveMessage());
             // any other direct message should be treated as such
         } else {
             String incomingMessage = (String) message.getContent().get("text");
@@ -71,20 +67,19 @@ public class MessageListenerImpl extends MessageListener {
             mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
         }
         if (broadcastType.equals(Tag.PAYLOAD_FROM_SERVER.value)) {
-            Log.e(TAG, "received notif from my dominant");
             mainActivity.getNotificationFragment().addNotification(new Notification(incomingMsg));
         }
         if (broadcastType.equals(Tag.PAYLOAD_NO_LONGER_DOMINANT.value)) {
-            Log.e(TAG, "received that my dominant is no longer dominant");
+            Log.i(TAG, "received that my dominant is no longer dominant");
             mainActivity.getNode().setDominant(null);
         }
-        if (broadcastType.equals(Tag.PAYLOAD_DOMINANT.value)) {
-            for(Neighbor n : mainActivity.getNode().getNeighbours()){
-                if(n.getId().equals(message.getSenderId())){
+        if (broadcastType.equals(Tag.PAYLOAD_POTENTIAL_DOMINANT.value)) {
+            for (Neighbor neighbor : mainActivity.getNode().getNeighbours()) {
+                if (neighbor.getId().equals(message.getSenderId())) {
                     if (mainActivity.getNode().isDominant() == Status.DOMINATED.value) {
-                        mainActivity.getNode().setDominant(n);
+                        mainActivity.getNode().setDominant(neighbor);
                     } else {
-                        handleDominatingStatus(message.getSenderId(), n, Status.DOMINATING.value);
+                        handleDominatingStatus(message.getSenderId(), neighbor, Status.DOMINATING.value);
                     }
                     break;
                 }
@@ -101,7 +96,7 @@ public class MessageListenerImpl extends MessageListener {
         node.setMacAddress(messageContent.get(Tag.PAYLOAD_MAC_ADDRESS.value));
         node.setIsDominant(Integer.parseInt(getFromMessage(messageContent, Tag.PAYLOAD_IS_DOMINANT.value)));
         node.setRssi(Float.parseFloat(getFromMessage(messageContent, Tag.PAYLOAD_RSSI.value)));
-        Log.e(TAG, "mon handshake est " + messageContent.get(Tag.PAYLOAD_IS_DOMINANT.value) + " son rssi est " + messageContent.get(Tag.PAYLOAD_RSSI.value));
+        Log.i(TAG, "handshake est " + messageContent.get(Tag.PAYLOAD_IS_DOMINANT.value) + " son rssi est " + messageContent.get(Tag.PAYLOAD_RSSI.value));
         return node;
     }
 
@@ -111,24 +106,24 @@ public class MessageListenerImpl extends MessageListener {
             case 0:
                 if ((neighborStatus) == Status.DOMINATING.value) {
                     node.setDominant(neighbor);
-                    Log.e(TAG, "JE SUIS DOMINE");
+                    Log.i(TAG, "JE SUIS DOMINE");
                     return;
                 }
-                Log.e(TAG, "PERSONNE NE DOMINE");
+                Log.i(TAG, "PERSONNE NE DOMINE");
                 return;
             case 1:
                 if (neighborStatus == Status.DOMINATED.value) {
                     node.addToDominating(senderId, neighbor.getMacAddress());
-                    Log.e(TAG, "JE DOMINE QUELQU'UN DE NOUVEAU");
+                    Log.i(TAG, "JE DOMINE QUELQU'UN DE NOUVEAU");
                 } else {
                     if (node.getRssi() < neighbor.getRSSI()) {
                         node.setIsDominant(Status.DOMINATED.value);
                         node.setDominant(neighbor);
                         node.clearDominatingList();
-                        Log.e(TAG, "JE NE SUIS PLUS DOMINANT CAR MON RSSI EST PETIT, MOI : " + node.getRssi() + " mon voisin : " + neighbor.getRSSI());
+                        Log.i(TAG, "JE NE SUIS PLUS DOMINANT CAR MON RSSI EST PETIT, MOI : " + node.getRssi() + " mon voisin : " + neighbor.getRSSI());
                     } else {
                         node.addToDominating(senderId, neighbor.getMacAddress());
-                        Log.e(TAG, "JE SUIS DOMINANT CAR MON RSSI EST MEILLEUR, MOI : " + node.getRssi() + " mon voisin : " + neighbor.getRSSI());
+                        Log.i(TAG, "JE SUIS DOMINANT CAR MON RSSI EST MEILLEUR, MOI : " + node.getRssi() + " mon voisin : " + neighbor.getRSSI());
                     }
                 }
         }

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
@@ -29,6 +30,7 @@ public class NotificationFragment extends Fragment {
 
     private final String TAG = "NotificationFragment";
     private TextView title;
+    private ImageView statusIcon;
     private Intent intentService;
     private RecyclerView notificationRecyclerView;
     private NotificationAdapter notificationAdapter;
@@ -39,7 +41,7 @@ public class NotificationFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.notification_fragment, container, false);
         title = view.findViewById(R.id.txt_server);
-
+        statusIcon = view.findViewById(R.id.status_icon);
         notifications = new ArrayList<>();
         notificationAdapter = new NotificationAdapter(notifications);
 
@@ -57,7 +59,7 @@ public class NotificationFragment extends Fragment {
 
     public void addNotification(Notification notification) {
         notificationAdapter.addNotification(notification);
-        notificationRecyclerView.scrollToPosition(notificationAdapter.getItemCount()-1);
+        notificationRecyclerView.scrollToPosition(notificationAdapter.getItemCount() - 1);
     }
 
 
@@ -65,13 +67,18 @@ public class NotificationFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             MainActivity mainActivity = (MainActivity) getActivity();
             if (intent.getAction().equals(Tag.INTENT_SERVER_SERVICE.value)) {
-                String notificationAction = intent.getStringExtra(Tag.ACTION_MESSAGE_RECEIVED.value);
+                String notificationAction = intent.getStringExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value);
                 if (notificationAction != null) {
                     addNotification(new Notification(notificationAction));
                 }
                 String connectedAction = intent.getStringExtra(Tag.ACTION_CHANGE_TITLE.value);
                 if (connectedAction != null) {
                     title.setText(connectedAction);
+                    if (connectedAction.equals(Tag.TITLE_DOMINANT.value)) {
+                        statusIcon.setImageResource(R.drawable.ic_dominant);
+                    } else {
+                        statusIcon.setImageResource(R.drawable.ic_domine);
+                    }
                 }
             } else if (intent.getAction().equals(Tag.INTENT_MAIN_ACTIVITY.value)) {
                 String action = intent.getStringExtra(Tag.ACTION_CONNECT.value);
@@ -88,6 +95,10 @@ public class NotificationFragment extends Fragment {
             }
         }
     };
+
+    public BroadcastReceiver getReceiver(){
+        return receiver;
+    }
 
     public Intent getIntentService() {
         return intentService;

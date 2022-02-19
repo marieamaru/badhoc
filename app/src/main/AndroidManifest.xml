@@ -39,12 +39,19 @@
             </intent-filter>
 
         </activity>
+        <activity
+            android:name=".service.LocationService"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan">
+        </activity>
         <service android:name="org.eclipse.paho.android.service.MqttService"/>
         <service android:name=".service.ServerService" />
         <!-- Bridgefy SDK key -->
         <meta-data
             android:name="com.bridgefy.sdk.API_KEY"
-            android:value="YOUR_API_KEY" />
+            android:value="@string/api_key" />
     </application>
 
 </manifest>

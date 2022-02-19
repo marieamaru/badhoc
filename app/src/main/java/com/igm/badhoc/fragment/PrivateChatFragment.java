@@ -32,18 +32,12 @@ public class PrivateChatFragment extends Fragment {
     private final String TAG = "PrivateChatFragment";
     private RecyclerView privateChatRecyclerView;
     private MessagesBadhocAdapter messagesBadhocAdapter;
-    Map<String, List<MessageBadhoc>> conversationsMap;
+    private Map<String, List<MessageBadhoc>> conversationsMap;
 
     private String currentConversationId;
 
-    EditText txtMessage;
-    ImageView btnSend;
-
-    public static PrivateChatFragment newInstance(Bundle bundle) {
-        PrivateChatFragment fragment = new PrivateChatFragment();
-        fragment.setArguments(bundle);
-        return fragment;
-    }
+    private EditText txtMessage;
+    private ImageView btnSend;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
