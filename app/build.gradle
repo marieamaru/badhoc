@@ -15,6 +15,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    lintOptions {
+        lintConfig file("../lint.xml")
+    }
+
     buildTypes {
         release {
             minifyEnabled false

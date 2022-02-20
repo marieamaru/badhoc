@@ -1,5 +1,8 @@
 package com.igm.badhoc.model;
 
+/**
+ * Enum representing the different strings associated to a key for payload content, or intent use
+ */
 public enum Tag {
 
     BROADCAST_CHAT("Broadcast"),
@@ -12,15 +15,18 @@ public enum Tag {
     PAYLOAD_REGULAR_BROADCAST("regular"),
     PAYLOAD_FROM_SERVER("from_server"),
     PAYLOAD_NO_LONGER_DOMINANT("no_longer_dominant"),
-    PAYLOAD_DOMINANT("payload_dominant"),
+    PAYLOAD_POTENTIAL_DOMINANT("payload_potential_dominant"),
 
     INTENT_SERVER_SERVICE("mqtt"),
     INTENT_MAIN_ACTIVITY("server"),
 
     ACTION_CONNECT("action_connect"),
-    ACTION_MESSAGE_RECEIVED("message_received_from_topic"),
+    ACTION_NOTIFICATION_RECEIVED("message_received_from_topic"),
     ACTION_UPDATE_NODE_INFO("action_update_node_info"),
-    ACTION_CHANGE_TITLE("change_title");
+    ACTION_CHANGE_TITLE("change_title"),
+
+    TITLE_NOT_DOMINANT("Notifications from dominant"),
+    TITLE_DOMINANT("Notifications from server");
 
     public final String value;
 

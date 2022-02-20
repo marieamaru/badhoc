@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
@@ -25,21 +26,45 @@ import com.igm.badhoc.service.ServerService;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fragment that represents the Notifications tab of the application
+ */
 public class NotificationFragment extends Fragment {
 
-    private final String TAG = "NotificationFragment";
+    /**
+     * The text view corresponding to the title at the top of the fragment
+     */
     private TextView title;
+    /**
+     * The image corresponding to the connection status
+     */
+    private ImageView statusIcon;
+    /**
+     * The intent of the ServerService
+     */
     private Intent intentService;
+    /**
+     * RecyclerView that represents the notifications in the list
+     */
     private RecyclerView notificationRecyclerView;
+    /**
+     * Adapter object that represents the notifications list
+     */
     private NotificationAdapter notificationAdapter;
+    /**
+     * The list of notifications received
+     */
     private List<Notification> notifications;
 
+    /**
+     * Method that initializes the fragment
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.notification_fragment, container, false);
         title = view.findViewById(R.id.txt_server);
-
+        statusIcon = view.findViewById(R.id.status_icon);
         notifications = new ArrayList<>();
         notificationAdapter = new NotificationAdapter(notifications);
 
@@ -47,31 +72,42 @@ public class NotificationFragment extends Fragment {
         notificationRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         notificationRecyclerView.setAdapter(notificationAdapter);
 
-        intentService = new Intent(getActivity(), ServerService.class);
+        intentService = new Intent(requireActivity(), ServerService.class);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Tag.INTENT_SERVER_SERVICE.value);
         intentFilter.addAction(Tag.INTENT_MAIN_ACTIVITY.value);
-        getActivity().registerReceiver(receiver, intentFilter);
+        requireActivity().registerReceiver(receiver, intentFilter);
         return view;
     }
 
+    /**
+     * Method that adds a notification to the list of notifications in the adapter
+     */
     public void addNotification(Notification notification) {
         notificationAdapter.addNotification(notification);
-        notificationRecyclerView.scrollToPosition(notificationAdapter.getItemCount()-1);
+        notificationRecyclerView.scrollToPosition(notificationAdapter.getItemCount() - 1);
     }
 
 
+    /**
+     * Broadcast Receiver object that listens for inputs from the main activity or the ServerService
+     */
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            MainActivity mainActivity = (MainActivity) getActivity();
+            MainActivity mainActivity = (MainActivity) requireActivity();
             if (intent.getAction().equals(Tag.INTENT_SERVER_SERVICE.value)) {
-                String notificationAction = intent.getStringExtra(Tag.ACTION_MESSAGE_RECEIVED.value);
+                String notificationAction = intent.getStringExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value);
                 if (notificationAction != null) {
                     addNotification(new Notification(notificationAction));
                 }
                 String connectedAction = intent.getStringExtra(Tag.ACTION_CHANGE_TITLE.value);
                 if (connectedAction != null) {
                     title.setText(connectedAction);
+                    if (connectedAction.equals(Tag.TITLE_DOMINANT.value)) {
+                        statusIcon.setImageResource(R.drawable.ic_dominant);
+                    } else {
+                        statusIcon.setImageResource(R.drawable.ic_domine);
+                    }
                 }
             } else if (intent.getAction().equals(Tag.INTENT_MAIN_ACTIVITY.value)) {
                 String action = intent.getStringExtra(Tag.ACTION_CONNECT.value);
@@ -89,6 +125,16 @@ public class NotificationFragment extends Fragment {
         }
     };
 
+    /**
+     * Getter for the BroadcastReceiver object
+     */
+    public BroadcastReceiver getReceiver() {
+        return receiver;
+    }
+
+    /**
+     * Getter for the ServerService intent
+     */
     public Intent getIntentService() {
         return intentService;
     }

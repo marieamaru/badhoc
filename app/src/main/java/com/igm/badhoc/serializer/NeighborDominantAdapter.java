@@ -17,7 +17,7 @@ public class NeighborDominantAdapter extends TypeAdapter<Neighbor> {
     }
 
     @Override
-    public Neighbor read(JsonReader in) throws IOException {
+    public Neighbor read(JsonReader in) {
         return null;
     }
 }

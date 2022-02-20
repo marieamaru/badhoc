@@ -19,18 +19,26 @@ import com.igm.badhoc.model.Node;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeighborsFragment extends Fragment implements ItemClickListener {
-
+/**
+ * Fragment that represents the Around Me tab of the application
+ */
+public class AroundMeFragment extends Fragment implements ItemClickListener {
+    /**
+     * RecyclerView that represents the neighbors around
+     */
     private RecyclerView neighborsRecyclerView;
+    /**
+     * Adapter object that represents the neighbors list
+     */
     private NeighborsAdapter neighborsAdapter;
+    /**
+     * The list of neighbors detected around
+     */
     private List<Node> neighbors;
 
-    public static NeighborsFragment newInstance(Bundle bundle) {
-        NeighborsFragment fragment = new NeighborsFragment();
-        fragment.setArguments(bundle);
-        return fragment;
-    }
-
+    /**
+     * Method that initializes the fragment
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -50,16 +58,25 @@ public class NeighborsFragment extends Fragment implements ItemClickListener {
         return view;
     }
 
+    /**
+     * Method that listens for clicks on the devices names
+     */
     @Override
     public void onItemClick(View view, int position) {
         Node node = neighbors.get(position);
         ((MainActivity) getActivity()).onItemClick(node.getId());
     }
 
+    /**
+     * Method that adds a neighbor to the list in the adapter and updates it
+     */
     public void addNeighborToConversations(Node node) {
         neighborsAdapter.addNeighbor(node);
     }
 
+    /**
+     * Method that removes a neighbor from the list in the adapter and updates it
+     */
     public void removeNeighborFromConversations(Device lostNeighbor) {
         neighborsAdapter.removeNeighbor(lostNeighbor);
     }
