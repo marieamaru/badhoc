@@ -17,26 +17,26 @@ import java.util.List;
 
 public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAdapter.MessageViewHolder> implements Serializable {
 
-    private List<MessageBadhoc> messageBadhocs;
+    private List<MessageBadhoc> badhocMessages;
     private String conversationId;
 
     public MessagesBadhocAdapter(String conversationId) {
         this.conversationId = conversationId;
     }
 
-    public MessagesBadhocAdapter(List<MessageBadhoc> messageBadhocs, String conversationId) {
-        this.messageBadhocs = messageBadhocs;
+    public MessagesBadhocAdapter(List<MessageBadhoc> badhocMessages, String conversationId) {
+        this.badhocMessages = badhocMessages;
         this.conversationId = conversationId;
     }
 
     public void addMessage(MessageBadhoc message) {
-        this.messageBadhocs.add(message);
-        notifyItemInserted(messageBadhocs.size() - 1);
+        this.badhocMessages.add(message);
+        notifyItemInserted(badhocMessages.size() - 1);
     }
 
     @Override
     public int getItemCount() {
-        return messageBadhocs.size();
+        return badhocMessages.size();
     }
 
     public void setConversationId(String conversationId) {
@@ -45,7 +45,7 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
 
     @Override
     public int getItemViewType(int position) {
-        return messageBadhocs.get(position).getDirection();
+        return badhocMessages.get(position).getDirection();
     }
 
     @NonNull
@@ -69,11 +69,11 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
 
     @Override
     public void onBindViewHolder(final MessageViewHolder messageHolder, int position) {
-        messageHolder.setMessage(messageBadhocs.get(position));
+        messageHolder.setMessage(badhocMessages.get(position));
     }
 
-    public void setMessageBadhocs(List<MessageBadhoc> messageBadhocs) {
-        this.messageBadhocs = messageBadhocs;
+    public void setBadhocMessages(List<MessageBadhoc> badhocMessages) {
+        this.badhocMessages = badhocMessages;
     }
 
     public class MessageViewHolder extends RecyclerView.ViewHolder {

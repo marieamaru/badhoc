@@ -6,10 +6,22 @@ import com.igm.badhoc.serializer.NeighborDominatingAdapter;
 
 import java.util.Objects;
 
+/**
+ * Class that represents a simplified version of a device
+ */
 @JsonAdapter(NeighborDominatingAdapter.class)
 public class Neighbor {
+    /**
+     * Unique id corresponding to the device
+     */
     private final String id;
+    /**
+     * MAC address of the device
+     */
     private final String macAddress;
+    /**
+     * RSSI signal of the device
+     */
     private final float RSSI;
 
     public Neighbor(final String id, final String macAddress, final float RSSI) {

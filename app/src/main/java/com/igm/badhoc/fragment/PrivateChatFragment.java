@@ -1,7 +1,6 @@
 package com.igm.badhoc.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,18 +26,44 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Fragment that represents the Private Chat tab of the application
+ */
 public class PrivateChatFragment extends Fragment {
 
+    /**
+     * Debug Tag used in logging
+     */
     private final String TAG = "PrivateChatFragment";
+    /**
+     * RecyclerView that represents the messages in the list
+     */
     private RecyclerView privateChatRecyclerView;
+    /**
+     * Adapter object that represents the messages list
+     */
     private MessagesBadhocAdapter messagesBadhocAdapter;
+    /**
+     * The map object of messages sent and received associated to its conversation id
+     */
     private Map<String, List<MessageBadhoc>> conversationsMap;
 
+    /**
+     * The id of the current conversation
+     */
     private String currentConversationId;
-
+    /**
+     * The text zone corresponding to where the message is edited
+     */
     private EditText txtMessage;
+    /**
+     * The image on the send button of the fragment
+     */
     private ImageView btnSend;
 
+    /**
+     * Method that initializes the fragment
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -58,29 +83,35 @@ public class PrivateChatFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Method to send a message to other devices using Bridgefy
+     */
     public void onMessageSend(View v) {
-        // close keyboard after send
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
-        // get the message and push it to the views
-        MainActivity mainActivity = (MainActivity) getActivity();
+        MainActivity mainActivity = (MainActivity) requireActivity();
         String messageString = txtMessage.getText().toString().trim();
-        Log.e(TAG, mainActivity.getNode().nodeKeepAliveMessage());
         if (messageString.length() > 0) {
-            // update the views
             txtMessage.setText("");
             MessageBadhoc message = new MessageBadhoc(messageString);
             message.setDirection(MessageBadhoc.OUTGOING_MESSAGE);
-            // create a HashMap object to send
+
             HashMap<String, Object> content = new HashMap<>();
             content.put(Tag.PAYLOAD_TEXT.value, messageString);
             Message.Builder builder = new Message.Builder();
             builder.setContent(content).setReceiverId(currentConversationId);
+
             Bridgefy.sendMessage(builder.build(),
                     BFEngineProfile.BFConfigProfileLongReach);
             addMessage(message, currentConversationId);
         }
     }
 
+    /**
+     * Method to add a message and its conversation id to the map and update the adapter
+     *
+     * @param message  message to add to the list
+     * @param senderId id associated to the message
+     */
     public void addMessage(MessageBadhoc message, String senderId) {
         this.conversationsMap.get(senderId).add(message);
         if (senderId.equals(currentConversationId)) {
@@ -88,16 +119,27 @@ public class PrivateChatFragment extends Fragment {
         }
     }
 
+    /**
+     * Setter method to set the conversation id of the message to display the correct fragment
+     */
     public void setConversationId(String conversationId) {
         this.currentConversationId = conversationId;
         messagesBadhocAdapter.setConversationId(conversationId);
     }
 
-    public void setMessageBadhocs(String convId) {
-        messagesBadhocAdapter.setMessageBadhocs(conversationsMap.get(convId));
+    /**
+     * Method that adds the list of message to the adapter
+     */
+    public void setBadhocMessages(String conversationId) {
+        messagesBadhocAdapter.setBadhocMessages(conversationsMap.get(conversationId));
         messagesBadhocAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Method that adds an entry to the conversations map if the sender is a new neighbor
+     *
+     * @param senderId id of the sender
+     */
     public void addNeighborToConversationsIfUnknown(String senderId) {
         if (!this.conversationsMap.containsKey(senderId)) {
             this.conversationsMap.put(senderId, new ArrayList<>());

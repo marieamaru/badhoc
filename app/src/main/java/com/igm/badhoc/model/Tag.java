@@ -1,5 +1,8 @@
 package com.igm.badhoc.model;
 
+/**
+ * Enum representing the different strings associated to a key for payload content, or intent use
+ */
 public enum Tag {
 
     BROADCAST_CHAT("Broadcast"),

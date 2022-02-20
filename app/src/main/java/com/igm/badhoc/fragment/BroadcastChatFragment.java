@@ -25,16 +25,39 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Fragment that represents the Broadcast tab of the application
+ */
 public class BroadcastChatFragment extends Fragment {
 
+    /**
+     * RecyclerView that represents the messages in the list
+     */
     private RecyclerView broadcastRecyclerView;
+    /**
+     * Adapter object that represents the messages list
+     */
     private MessagesBadhocAdapter messagesBadhocAdapter;
-    private List<MessageBadhoc> messageBadhocs;
+    /**
+     * The list of messages sent and received
+     */
+    private List<MessageBadhoc> badhocMessages;
+    /**
+     * The id of the Broadcast conversation
+     */
     private String conversationId;
+    /**
+     * The text zone corresponding to where the message is edited
+     */
+    private EditText txtMessage;
+    /**
+     * The image on the send button of the fragment
+     */
+    private ImageView btnSend;
 
-    EditText txtMessage;
-    ImageView btnSend;
-
+    /**
+     * Method that initializes the fragment
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -46,16 +69,18 @@ public class BroadcastChatFragment extends Fragment {
 
         btnSend.setOnClickListener(this::onMessageSend);
         conversationId = Tag.BROADCAST_CHAT.value;
-        messageBadhocs = new ArrayList<>();
+        badhocMessages = new ArrayList<>();
         broadcastRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        messagesBadhocAdapter = new MessagesBadhocAdapter(messageBadhocs, conversationId);
+        messagesBadhocAdapter = new MessagesBadhocAdapter(badhocMessages, conversationId);
         broadcastRecyclerView.setAdapter(messagesBadhocAdapter);
 
         return view;
     }
 
+    /**
+     * Method to send a message to other devices using Bridgefy
+     */
     public void onMessageSend(View v) {
-        // close keyboard after send
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
         String messageString = txtMessage.getText().toString().trim();
         if (messageString.length() > 0) {
@@ -76,6 +101,9 @@ public class BroadcastChatFragment extends Fragment {
         }
     }
 
+    /**
+     * Method that add a message to the message list in the adapter
+     */
     public void addMessage(MessageBadhoc message) {
         messagesBadhocAdapter.addMessage(message);
         broadcastRecyclerView.scrollToPosition(messagesBadhocAdapter.getItemCount() - 1);

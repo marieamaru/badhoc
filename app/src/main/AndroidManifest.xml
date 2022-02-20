@@ -37,14 +37,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-        </activity>
-        <activity
-            android:name=".service.LocationService"
-            android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:exported="true"
-            android:windowSoftInputMode="adjustPan">
         </activity>
         <service android:name="org.eclipse.paho.android.service.MqttService"/>
         <service android:name=".service.ServerService" />

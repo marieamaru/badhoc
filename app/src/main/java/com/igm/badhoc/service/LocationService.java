@@ -15,31 +15,59 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
+/**
+ * Service that implements the collection of the position and speed of the device
+ */
 public class LocationService extends Service implements LocationListener {
-
+    /**
+     * Context to analyse
+     */
     private final Context context;
 
-    // flag for GPS status
+    /**
+     * flag for GPS status
+     */
     boolean isGPSEnabled = false;
 
-    // flag for network status
+    /**
+     * flag for network status
+     */
     boolean isNetworkEnabled = false;
 
-    // flag for GPS status
+    /**
+     * flag for GPS status
+     */
     boolean canGetLocation = false;
+    /**
+     * Location of the device
+     */
+    private Location location;
+    /**
+     * Latitude of the device
+     */
+    private double latitude;
+    /**
+     * Longitude of the device
+     */
+    private double longitude;
+    /**
+     * Speed of the device
+     */
+    private int speed;
 
-    private Location location; // location
-    private double latitude; // latitude
-    private double longitude; // longitude
-    private int speed; //speed
-
-    // The minimum distance to change Updates in meters
+    /**
+     * The minimum distance to change Updates in meters
+     */
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
 
-    // The minimum time between updates in milliseconds
+    /**
+     * The minimum time between updates in milliseconds
+     */
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60; // 1 minute
 
-    // Declaring a Location Manager
+    /**
+     * LocationManager for the collection of the location
+     */
     protected LocationManager locationManager;
 
     public LocationService(Context context) {
@@ -47,6 +75,11 @@ public class LocationService extends Service implements LocationListener {
         getLocation();
     }
 
+    /**
+     * Method that collects the location and speed of the device
+     *
+     * @return
+     */
     public Location getLocation() {
         try {
             locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
@@ -104,14 +137,12 @@ public class LocationService extends Service implements LocationListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return location;
     }
 
     /**
-     * Function to get latitude
+     * Method to get latitude
      */
-
     public double getLatitude() {
         if (location != null) {
             latitude = location.getLatitude();
@@ -121,9 +152,8 @@ public class LocationService extends Service implements LocationListener {
     }
 
     /**
-     * Function to get longitude
+     * Method to get longitude
      */
-
     public double getLongitude() {
         if (location != null) {
             longitude = location.getLongitude();
@@ -131,6 +161,9 @@ public class LocationService extends Service implements LocationListener {
         return longitude;
     }
 
+    /**
+     * Method to get speed
+     */
     public int getSpeed() {
         if (location != null) {
             speed = (int) location.getSpeed();
@@ -139,7 +172,7 @@ public class LocationService extends Service implements LocationListener {
     }
 
     /**
-     * Function to check GPS/wifi enabled
+     * Function to check if GPS/wifi is enabled
      *
      * @return boolean
      */

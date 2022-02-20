@@ -54,25 +54,64 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+/**
+ * Service implementing the connexion to the remote MQTT server
+ */
 public class ServerService extends Service {
-
+    /**
+     * Debug Tag used in logging
+     */
     private final String TAG = "ServerService";
-    private MqttAndroidClient client;
+    /**
+     * Intent object to communicate with the notification fragment
+     */
     private final Intent intent = new Intent(Tag.INTENT_SERVER_SERVICE.value);
-    private Timer timer;
-    private String messageJson = "{}";
+    /**
+     * Name of the topic to subscribe to
+     */
     private final String subscribeTopic = "notifs";
+    /**
+     * Name of the topic to publish on
+     */
     private final String publishTopic = "nodekeepalive";
+    /**
+     * URL of the remote server to connect to
+     */
     private final String url = "ssl://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
+    /**
+     * Recurring timer that publishes a message
+     */
+    private Timer timer;
+    /**
+     * Message to publish on the nodekeepalive topic
+     */
+    private String messageJson = "{}";
+    /**
+     * MQTT client used to connect to the remote server
+     */
+    private MqttAndroidClient client;
+    /**
+     * Message received from the subscribed topic
+     */
     private String messageReceived;
+    /**
+     * Boolean indicating if the service should try to reconnect to the server
+     */
     private boolean doReconnect;
 
+    /**
+     * Method called on start of the service :
+     * recuperates the content of the message from the main activity to publish to the nodekeepalive topic
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
         return START_NOT_STICKY;
     }
 
+    /**
+     * Method called when the service is created
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -85,6 +124,9 @@ public class ServerService extends Service {
         initializeTimerForPublish();
     }
 
+    /**
+     * Method called for devices using android sdk above 26, the service needs to be started as a foreground service
+     */
     private void handleApiAbove26() {
         if (Build.VERSION.SDK_INT >= 26) {
             String NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
@@ -107,6 +149,9 @@ public class ServerService extends Service {
         }
     }
 
+    /**
+     * Method called on the destroyment of the service to close all resources
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -123,13 +168,22 @@ public class ServerService extends Service {
         }
     }
 
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
 
+    /**
+     * MqttCallback object used to listen for the loss of connection, the arrival of a message, and
+     * the successful delivery of a message
+     */
     MqttCallback mqttCallback = new MqttCallback() {
+        /**
+         * Method called if the connection is lost
+         * @param cause cause of the end of the connection
+         */
         @Override
         public void connectionLost(Throwable cause) {
             Log.e(TAG, "Connection lost");
@@ -139,21 +193,38 @@ public class ServerService extends Service {
             sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_NOT_DOMINANT.value));
         }
 
+        /**
+         * Method called when a message is received from a subscribed topic
+         * @param topic topic from where the message comes from
+         * @param message message received from the topic
+         */
         @Override
-        public void messageArrived(String topic, MqttMessage message) throws Exception {
+        public void messageArrived(String topic, MqttMessage message) {
             Log.i(TAG, "topic: " + topic + ", msg: " + new String(message.getPayload()));
             messageReceived = new String(message.getPayload());
             sendBroadcast(intent.putExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value, messageReceived));
             broadcastMessageFromServer(messageReceived);
         }
 
+        /**
+         * Method called when a message is successfully delivered to a topic
+         * @param token
+         */
         @Override
         public void deliveryComplete(IMqttDeliveryToken token) {
             Log.i(TAG, "msg delivered");
         }
     };
 
+    /**
+     * Listener for the establishment of the connection
+     */
     IMqttActionListener mqttConnectActionListener = new IMqttActionListener() {
+        /**
+         * Method called if the connection is successful :
+         * the service then subscribes to the topic and updates the title of the notification fragment
+         * @param asyncActionToken
+         */
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
             // We are connected
@@ -162,6 +233,12 @@ public class ServerService extends Service {
             sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_DOMINANT.value));
         }
 
+        /**
+         * Method called on failure of the connection :
+         * the service tries to reconnect
+         * @param asyncActionToken
+         * @param exception
+         */
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
             // Something went wrong e.g. connection timeout or firewall problems
@@ -170,6 +247,9 @@ public class ServerService extends Service {
         }
     };
 
+    /**
+     * Method to connect to the remote server. Implements the options of the connection
+     */
     private void connect() {
         InputStream caCrtFile = getApplicationContext().getResources().openRawResource(R.raw.ca);
         InputStream crtFile = getApplicationContext().getResources().openRawResource(R.raw.cert);
@@ -196,6 +276,12 @@ public class ServerService extends Service {
         }
     }
 
+    /**
+     * Method called to publish a message on a topic
+     *
+     * @param publishTopic topic to publish on
+     * @param messageJson  message to publish
+     */
     public void publishMessage(final String publishTopic, final String messageJson) {
         if (client.isConnected() && !messageJson.equals("{}")) {
             Log.i(TAG, "in publish and message is updated " + messageJson);
@@ -220,6 +306,11 @@ public class ServerService extends Service {
         }
     }
 
+    /**
+     * Method called to subscribe to a topic
+     *
+     * @param subTopic topic to subscribe to
+     */
     public void subscribeToTopic(final String subTopic) {
         if (client.isConnected()) {
             try {
@@ -241,12 +332,24 @@ public class ServerService extends Service {
         }
     }
 
+    /**
+     * BroadcastReceiver object that listens for updates of the node content from the main activity
+     */
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
         }
     };
 
+    /**
+     * Method that sets the certificate for the SSL connection
+     *
+     * @param caCrtFile CA certificate
+     * @param crtFile   client certificate
+     * @param keyFile   client private key
+     * @return SSLSocketFactory for the connection
+     * @throws CertificateException
+     */
     private SSLSocketFactory setCertificate(InputStream caCrtFile, InputStream crtFile, InputStream keyFile) throws CertificateException {
         Security.addProvider(new BouncyCastleProvider());
         // Load CAs from an InputStream
@@ -297,6 +400,10 @@ public class ServerService extends Service {
         }
     }
 
+    /**
+     * Method that defines the recurring task that publishes a message to the topic
+     * every 60 seconds
+     */
     private void initializeTimerForPublish() {
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -308,6 +415,11 @@ public class ServerService extends Service {
         timer.scheduleAtFixedRate(timerTask, 30000, 60000);
     }
 
+    /**
+     * Method that sends a broadcast message to devices connected using Bridgefy
+     *
+     * @param messageFromServer message to send to the other devices
+     */
     private void broadcastMessageFromServer(String messageFromServer) {
         HashMap<String, Object> content = new HashMap<>();
         content.put(Tag.PAYLOAD_TEXT.value, messageFromServer);
