@@ -291,7 +291,7 @@ public class ServerService extends Service {
                 client.publish(publishTopic, message, null, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.e(TAG, "publish succeed!");
+                        Log.i(TAG, "publish succeed!");
                     }
 
                     @Override

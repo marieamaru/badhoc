@@ -6,7 +6,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.1.1'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -22,32 +22,8 @@ allprojects {
     }
 }
 
-apply plugin: 'java'
-
-task generateSources(type: Jar) {
-    baseName = 'sources'
-    from sourceSets.main.java.srcDirs
-}
-apply plugin: 'com.android.library'
-task generateSources (type: Jar) {
-    classifier = 'sources'
-    from android.sourceSets.main.java.srcDirs
-}
-
-artifacts {
-    archives generateSources
-}
-
 
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-task generateJavadoc(type: Javadoc) {
-    title = "Ma Javadoc"
-    description "La javadoc de mon projet"
-    failOnError = false
-    source = "MonProjet/src"
-    options.charSet = "UTF-8"
-    destinationDir = new File("build/target/javadoc")
-}
