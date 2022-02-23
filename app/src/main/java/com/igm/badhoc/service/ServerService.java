@@ -19,7 +19,10 @@ import androidx.core.app.NotificationCompat;
 import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.igm.badhoc.R;
+import com.igm.badhoc.model.ServerNotification;
 import com.igm.badhoc.model.Tag;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -90,10 +93,6 @@ public class ServerService extends Service {
      * MQTT client used to connect to the remote server
      */
     private MqttAndroidClient client;
-    /**
-     * Message received from the subscribed topic
-     */
-    private String messageReceived;
     /**
      * Boolean indicating if the service should try to reconnect to the server
      */
@@ -201,9 +200,10 @@ public class ServerService extends Service {
         @Override
         public void messageArrived(String topic, MqttMessage message) {
             Log.i(TAG, "topic: " + topic + ", msg: " + new String(message.getPayload()));
-            messageReceived = new String(message.getPayload());
-            sendBroadcast(intent.putExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value, messageReceived));
-            broadcastMessageFromServer(messageReceived);
+            String messageReceived = new String(message.getPayload());
+            String parsedResponse = parseNotifsResponse(messageReceived);
+            sendBroadcast(intent.putExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value, parsedResponse));
+            broadcastMessageFromServer(parsedResponse);
         }
 
         /**
@@ -413,6 +413,12 @@ public class ServerService extends Service {
         };
         timer = new Timer();
         timer.scheduleAtFixedRate(timerTask, 30000, 60000);
+    }
+
+    private String parseNotifsResponse(String notification){
+        Gson gson = new Gson();
+        ServerNotification serverNotification = gson.fromJson(notification, ServerNotification.class);
+        return serverNotification.getNotif();
     }
 
     /**
