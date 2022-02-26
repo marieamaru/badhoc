@@ -2,7 +2,6 @@ package com.igm.badhoc.fragment;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -76,7 +75,6 @@ public class BroadcastChatFragment extends Fragment {
         btnImage = view.findViewById(R.id.btnImage);
         broadcastRecyclerView = view.findViewById(R.id.message_list);
         progressBar = view.findViewById(R.id.progressBar);
-        //progressBar.setVisibility(View.GONE);
         btnSend.setOnClickListener(this::onMessageSend);
         btnImage.setVisibility(View.GONE);
         conversationId = Tag.BROADCAST_CHAT.value;
@@ -91,7 +89,6 @@ public class BroadcastChatFragment extends Fragment {
      * Method to send a message to other devices using Bridgefy
      */
     public void onMessageSend(View v) {
-        Log.e("coucou", "Message send");
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
         String messageString = txtMessage.getText().toString().trim();
         if (messageString.length() > 0) {

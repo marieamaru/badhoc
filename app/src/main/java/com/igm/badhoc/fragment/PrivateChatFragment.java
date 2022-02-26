@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +26,6 @@ import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
 import com.igm.badhoc.R;
-import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
@@ -93,7 +91,6 @@ public class PrivateChatFragment extends Fragment {
         btnImage = view.findViewById(R.id.btnImage);
         privateChatRecyclerView = view.findViewById(R.id.message_list);
         progressBar = view.findViewById(R.id.progressBar);
-        //progressBar.setVisibility(View.GONE);
         messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
         conversationsMap = new HashMap<>();
 
@@ -124,7 +121,6 @@ public class PrivateChatFragment extends Fragment {
      */
     public void onMessageSend(View v) {
         txtMessage.onEditorAction(EditorInfo.IME_ACTION_DONE);
-        MainActivity mainActivity = (MainActivity) requireActivity();
         String messageString = txtMessage.getText().toString().trim();
         if (messageString.length() > 0) {
             txtMessage.setText("");
@@ -144,9 +140,6 @@ public class PrivateChatFragment extends Fragment {
     }
 
     public void onImageSend(View v) {
-        Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
-        chooseFile.setType("*/*");
-        chooseFile = Intent.createChooser(chooseFile, "Choose a file");
         getImageAndSendMessage.launch("*/*");
     }
 
@@ -154,9 +147,6 @@ public class PrivateChatFragment extends Fragment {
             new ActivityResultCallback<Uri>() {
                 @Override
                 public void onActivityResult(Uri uri) {
-                    Log.e("coucou", "activity result ");
-                    Log.e("coucou", "URI : " + uri);
-
                     try {
                         InputStream inputStream = requireActivity().getContentResolver().openInputStream(uri);
                         byte[] fileContent = new byte[inputStream.available()];
@@ -166,14 +156,12 @@ public class PrivateChatFragment extends Fragment {
                         HashMap<String, Object> content = new HashMap<>();
                         content.put(Tag.PAYLOAD_TEXT.value, filePath);
                         content.put(Tag.PAYLOAD_PRIVATE_TYPE.value, Tag.PAYLOAD_IMAGE.value);
-                        //content.put("data", fileContent);
                         Message.Builder builder = new Message.Builder();
                         Message message = builder.setReceiverId(currentConversationId).setContent(content).setData(fileContent).build();
                         message.setUuid(Bridgefy.sendMessage(message));
                         MessageBadhoc messageImage = new MessageBadhoc(filePath);
                         messageImage.setDirection(MessageBadhoc.OUTGOING_IMAGE);
                         messageImage.setData(fileContent);
-                        Log.e(TAG, "ON SEND " + fileContent.length + " in real msg : " + message.getData().length);
                         addMessage(messageImage, currentConversationId);
                         progressBar.setVisibility(View.VISIBLE);
                     } catch (IOException e) {
