@@ -12,13 +12,16 @@ public enum Tag {
     PAYLOAD_RSSI("rssi"),
     PAYLOAD_IS_DOMINANT("status"),
     PAYLOAD_BROADCAST_TYPE("broadcast_type"),
+    PAYLOAD_PRIVATE_TYPE("private_type"),
     PAYLOAD_REGULAR_BROADCAST("regular"),
+    PAYLOAD_IMAGE("image"),
     PAYLOAD_FROM_SERVER("from_server"),
     PAYLOAD_NO_LONGER_DOMINANT("no_longer_dominant"),
     PAYLOAD_POTENTIAL_DOMINANT("payload_potential_dominant"),
 
     INTENT_SERVER_SERVICE("mqtt"),
-    INTENT_MAIN_ACTIVITY("server"),
+    INTENT_MAIN_ACTIVITY("main_activity"),
+    INTENT_MSG_PROGRESS("message_progress"),
 
     ACTION_CONNECT("action_connect"),
     ACTION_NOTIFICATION_RECEIVED("message_received_from_topic"),

@@ -1,14 +1,25 @@
 package com.igm.badhoc.fragment;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,6 +32,8 @@ import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +73,12 @@ public class PrivateChatFragment extends Fragment {
      * The image on the send button of the fragment
      */
     private ImageView btnSend;
+    /**
+     * The image on the image button of the fragment
+     */
+    private ImageView btnImage;
+    private int progress;
+    private ProgressBar progressBar;
 
     /**
      * Method that initializes the fragment
@@ -71,17 +90,34 @@ public class PrivateChatFragment extends Fragment {
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
         btnSend = view.findViewById(R.id.btnSend);
+        btnImage = view.findViewById(R.id.btnImage);
         privateChatRecyclerView = view.findViewById(R.id.message_list);
-
+        progressBar = view.findViewById(R.id.progressBar);
+        //progressBar.setVisibility(View.GONE);
         messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
         conversationsMap = new HashMap<>();
 
         btnSend.setOnClickListener(this::onMessageSend);
+        btnImage.setOnClickListener(this::onImageSend);
         privateChatRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         privateChatRecyclerView.setAdapter(messagesBadhocAdapter);
-
+        LocalBroadcastManager.getInstance(requireActivity().getBaseContext()).registerReceiver(progressReceiver, new IntentFilter(Tag.INTENT_MAIN_ACTIVITY.value));
         return view;
     }
+
+    private BroadcastReceiver progressReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            progress = intent.getIntExtra(Tag.INTENT_MSG_PROGRESS.value, 0);
+            if (progressBar.getVisibility() == View.GONE) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
+            progressBar.setProgress(progress);
+            if (progress == 100 || progress == 0) {
+                progressBar.setVisibility(View.GONE);
+            }
+        }
+    };
 
     /**
      * Method to send a message to other devices using Bridgefy
@@ -97,6 +133,7 @@ public class PrivateChatFragment extends Fragment {
 
             HashMap<String, Object> content = new HashMap<>();
             content.put(Tag.PAYLOAD_TEXT.value, messageString);
+            content.put(Tag.PAYLOAD_PRIVATE_TYPE.value, Tag.PAYLOAD_TEXT.value);
             Message.Builder builder = new Message.Builder();
             builder.setContent(content).setReceiverId(currentConversationId);
 
@@ -105,6 +142,45 @@ public class PrivateChatFragment extends Fragment {
             addMessage(message, currentConversationId);
         }
     }
+
+    public void onImageSend(View v) {
+        Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseFile.setType("*/*");
+        chooseFile = Intent.createChooser(chooseFile, "Choose a file");
+        getImageAndSendMessage.launch("*/*");
+    }
+
+    ActivityResultLauncher<String> getImageAndSendMessage = registerForActivityResult(new ActivityResultContracts.GetContent(),
+            new ActivityResultCallback<Uri>() {
+                @Override
+                public void onActivityResult(Uri uri) {
+                    Log.e("coucou", "activity result ");
+                    Log.e("coucou", "URI : " + uri);
+
+                    try {
+                        InputStream inputStream = requireActivity().getContentResolver().openInputStream(uri);
+                        byte[] fileContent = new byte[inputStream.available()];
+                        inputStream.read(fileContent);
+                        String filePath = uri.getPath();
+
+                        HashMap<String, Object> content = new HashMap<>();
+                        content.put(Tag.PAYLOAD_TEXT.value, filePath);
+                        content.put(Tag.PAYLOAD_PRIVATE_TYPE.value, Tag.PAYLOAD_IMAGE.value);
+                        //content.put("data", fileContent);
+                        Message.Builder builder = new Message.Builder();
+                        Message message = builder.setReceiverId(currentConversationId).setContent(content).setData(fileContent).build();
+                        message.setUuid(Bridgefy.sendMessage(message));
+                        MessageBadhoc messageImage = new MessageBadhoc(filePath);
+                        messageImage.setDirection(MessageBadhoc.OUTGOING_IMAGE);
+                        messageImage.setData(fileContent);
+                        Log.e(TAG, "ON SEND " + fileContent.length + " in real msg : " + message.getData().length);
+                        addMessage(messageImage, currentConversationId);
+                        progressBar.setVisibility(View.VISIBLE);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
 
     /**
      * Method to add a message and its conversation id to the map and update the adapter
@@ -116,6 +192,7 @@ public class PrivateChatFragment extends Fragment {
         this.conversationsMap.get(senderId).add(message);
         if (senderId.equals(currentConversationId)) {
             messagesBadhocAdapter.notifyItemInserted(this.conversationsMap.get(senderId).size());
+            privateChatRecyclerView.scrollToPosition(this.conversationsMap.get(senderId).size() - 1);
         }
     }
 
@@ -144,5 +221,11 @@ public class PrivateChatFragment extends Fragment {
         if (!this.conversationsMap.containsKey(senderId)) {
             this.conversationsMap.put(senderId, new ArrayList<>());
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(requireActivity().getBaseContext()).unregisterReceiver(progressReceiver);
     }
 }

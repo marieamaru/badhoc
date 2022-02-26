@@ -1,6 +1,9 @@
 package com.igm.badhoc.listener;
 
+import android.content.Intent;
 import android.util.Log;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.MessageListener;
@@ -15,6 +18,7 @@ import com.igm.badhoc.model.Tag;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Implementation of the Bridgefy  message listener
@@ -28,6 +32,7 @@ public class MessageListenerImpl extends MessageListener {
      * Main activity object
      */
     private final MainActivity mainActivity;
+    private int currentProgress;
 
     /**
      * Constructor for the listener
@@ -62,12 +67,22 @@ public class MessageListenerImpl extends MessageListener {
             Log.i(TAG, "Peer introduced itself: " + newNode.getMacAddress());
             // any other direct message should be treated as such
         } else {
-            String incomingMessage = (String) message.getContent().get("text");
-            MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
-            messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
-            mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+            String messageType = messageContent.get(Tag.PAYLOAD_PRIVATE_TYPE.value);
+            String incomingMessage = messageContent.get(Tag.PAYLOAD_TEXT.value);
+            if (messageType.equals(Tag.PAYLOAD_TEXT.value)) {
+                MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
+                messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
+                mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+            } else {
+                byte[] fileBytes = message.getData();
+                MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
+                messageBadhoc.setData(fileBytes);
+                messageBadhoc.setDirection(MessageBadhoc.INCOMING_IMAGE);
+                mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+            }
             Log.d(TAG, "Incoming private message: " + incomingMessage);
         }
+
     }
 
     /**
@@ -92,6 +107,18 @@ public class MessageListenerImpl extends MessageListener {
             messageBadhoc.setDeviceName(deviceName);
             mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
         }
+        if (broadcastType.equals(Tag.PAYLOAD_IMAGE.value)) {
+            byte[] fileBytes = message.getData();
+            //byte[] fileBytes = (byte[]) message.getContent().get("data");
+            Log.e(TAG, "byte[] : " + fileBytes);
+            Log.e(TAG, "byte[] hash " + message.getContent().get("data"));
+            Log.e(TAG, "size ");
+            MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMsg);
+            messageBadhoc.setData(fileBytes);
+            messageBadhoc.setDeviceName(deviceName);
+            messageBadhoc.setDirection(MessageBadhoc.INCOMING_IMAGE);
+            mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
+        }
         if (broadcastType.equals(Tag.PAYLOAD_FROM_SERVER.value)) {
             mainActivity.getNotificationFragment().addNotification(new Notification(incomingMsg));
         }
@@ -112,7 +139,17 @@ public class MessageListenerImpl extends MessageListener {
             }
 
         }
-        Log.d(TAG, "Incoming broadcast message: " + incomingMsg);
+        Log.e(TAG, "Incoming broadcast message: " + incomingMsg);
+    }
+
+    @Override
+    public void onMessageDataProgress(UUID message, long progress, long fullSize) {
+        currentProgress = (int) ((progress * 100) / fullSize);
+        LocalBroadcastManager.getInstance(mainActivity.getBaseContext()).sendBroadcast(
+                new Intent(Tag.INTENT_MAIN_ACTIVITY.value)
+                        .putExtra(Tag.INTENT_MSG_PROGRESS.value, currentProgress)
+        );
+
     }
 
     /**

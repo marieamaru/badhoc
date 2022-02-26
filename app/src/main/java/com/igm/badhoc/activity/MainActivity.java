@@ -32,9 +32,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.bridgefy.sdk.client.BFBleProfile;
+import com.bridgefy.sdk.client.BFEnergyProfile;
 import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.BridgefyClient;
+import com.bridgefy.sdk.client.Config;
 import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.RegistrationListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -136,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         fragmentManager.beginTransaction().add(R.id.fl_fragment, notificationFragment, TAG).hide(notificationFragment).commit();
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setOnItemSelectedListener(this);
+        //BadgeDrawable badge = bottomNavigationView.getOrCreateBadge(R.id.action_broadcast);
+        //badge.setVisible(true);
         stateListener = new StateListenerImpl(this);
         messageListener = new MessageListenerImpl(this);
         timer = new Timer();
@@ -234,6 +239,14 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      * Bridgefy method to start the different listeners
      */
     private void startBridgefy() {
+        Config.Builder builder = new Config.Builder();
+        builder.setAntennaType(Config.Antenna.BLUETOOTH_LE);
+        builder.setAutoConnect(true);
+        builder.setEncryption(true);
+        builder.setMaxConnectionRetries(3);
+        builder.setBleProfile(BFBleProfile.BACKWARDS_COMPATIBLE);
+        builder.setEnergyProfile(BFEnergyProfile.HIGH_PERFORMANCE);
+        builder.setEngineProfile(BFEngineProfile.BFConfigProfileLongReach);
         Bridgefy.start(messageListener, stateListener);
     }
 

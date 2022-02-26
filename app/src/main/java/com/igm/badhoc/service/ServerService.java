@@ -20,7 +20,6 @@ import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.igm.badhoc.R;
 import com.igm.badhoc.model.ServerNotification;
 import com.igm.badhoc.model.Tag;
@@ -415,7 +414,7 @@ public class ServerService extends Service {
         timer.scheduleAtFixedRate(timerTask, 30000, 60000);
     }
 
-    private String parseNotifsResponse(String notification){
+    private String parseNotifsResponse(String notification) {
         Gson gson = new Gson();
         ServerNotification serverNotification = gson.fromJson(notification, ServerNotification.class);
         return serverNotification.getNotif();

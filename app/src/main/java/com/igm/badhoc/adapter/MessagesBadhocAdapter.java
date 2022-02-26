@@ -1,8 +1,11 @@
 package com.igm.badhoc.adapter;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -62,6 +65,13 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
                 messageView = LayoutInflater.from(viewGroup.getContext()).
                         inflate((R.layout.message_row_outgoing), viewGroup, false);
                 break;
+            case MessageBadhoc.INCOMING_IMAGE:
+                messageView = LayoutInflater.from(viewGroup.getContext()).
+                        inflate((R.layout.message_row_image_incoming), viewGroup, false);
+                break;
+            case MessageBadhoc.OUTGOING_IMAGE:
+                messageView = LayoutInflater.from(viewGroup.getContext()).
+                        inflate((R.layout.message_row_image_outgoing), viewGroup, false);
         }
 
         return new MessageViewHolder(messageView);
@@ -77,7 +87,7 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
     }
 
     public class MessageViewHolder extends RecyclerView.ViewHolder {
-        final TextView txtMessage;
+        final View txtMessage;
         final TextView deviceMessageName;
         MessageBadhoc message;
 
@@ -89,11 +99,23 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
 
         void setMessage(MessageBadhoc message) {
             this.message = message;
-            if (message.getDirection() == MessageBadhoc.INCOMING_MESSAGE &&
-                    conversationId.equals(Tag.BROADCAST_CHAT.value)) {
-                this.deviceMessageName.setText(message.getDeviceName());
+            int direction = message.getDirection();
+            //pick image message layout
+            if (direction == MessageBadhoc.INCOMING_IMAGE || direction == MessageBadhoc.OUTGOING_IMAGE) {
+                ImageView imageMessage = (ImageView) txtMessage;
+                Bitmap bm = BitmapFactory.decodeByteArray(message.getData(), 0, message.getData().length);
+                imageMessage.setImageBitmap(bm);
+            } else {
+                //pick text message layout
+                if (direction == MessageBadhoc.INCOMING_MESSAGE &&
+                        conversationId.equals(Tag.BROADCAST_CHAT.value)) {
+                    this.deviceMessageName.setText(message.getDeviceName());
+                    this.deviceMessageName.setVisibility(View.VISIBLE);
+                }
+                TextView texteMessage = (TextView) txtMessage;
+                texteMessage.setText(message.getText());
             }
-            this.txtMessage.setText(message.getText());
+
         }
     }
 }

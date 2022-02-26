@@ -27,6 +27,7 @@ android {
     }
     repositories{
         google()
+        jcenter()
         maven {
             url "http://104.196.228.98:8081/artifactory/libs-release-local"
             artifactUrls=["http://jcenter.bintray.com/"]
@@ -48,8 +49,10 @@ android {
 
 dependencies {
     implementation 'com.bridgefy:android-sdk:2.0.0'
+    implementation 'com.nbsp:materialfilepicker:1.9.1'
+   // implementation 'com.nbsp:library:1.8'
     compileOnly 'com.google.android.things:androidthings:1.0'
-    implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
