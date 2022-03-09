@@ -22,9 +22,8 @@ import com.igm.badhoc.adapter.NotificationAdapter;
 import com.igm.badhoc.model.Notification;
 import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.service.ServerService;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.igm.badhoc.util.DeviceUtil;
+import com.igm.badhoc.util.ParserUtil;
 
 /**
  * Fragment that represents the Notifications tab of the application
@@ -51,10 +50,6 @@ public class NotificationFragment extends Fragment {
      * Adapter object that represents the notifications list
      */
     private NotificationAdapter notificationAdapter;
-    /**
-     * The list of notifications received
-     */
-    private List<Notification> notifications;
 
     /**
      * Method that initializes the fragment
@@ -65,8 +60,7 @@ public class NotificationFragment extends Fragment {
         View view = inflater.inflate(R.layout.notification_fragment, container, false);
         title = view.findViewById(R.id.txt_server);
         statusIcon = view.findViewById(R.id.status_icon);
-        notifications = new ArrayList<>();
-        notificationAdapter = new NotificationAdapter(notifications);
+        notificationAdapter = new NotificationAdapter();
 
         notificationRecyclerView = view.findViewById(R.id.notif_list);
         notificationRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -111,10 +105,10 @@ public class NotificationFragment extends Fragment {
                 }
             } else if (intent.getAction().equals(Tag.INTENT_MAIN_ACTIVITY.value)) {
                 String action = intent.getStringExtra(Tag.ACTION_CONNECT.value);
-                if (action.equals("disconnect") && mainActivity.isServiceRunning(ServerService.class)) {
+                if (action.equals("disconnect") && DeviceUtil.isServiceRunning(ServerService.class, requireActivity())) {
                     requireActivity().stopService(intentService);
-                } else if (action.equals("connect") && !mainActivity.isServiceRunning(ServerService.class)) {
-                    intentService.putExtra(Tag.ACTION_UPDATE_NODE_INFO.value, mainActivity.getNode().nodeKeepAliveMessage());
+                } else if (action.equals("connect") && !DeviceUtil.isServiceRunning(ServerService.class, requireActivity())) {
+                    intentService.putExtra(Tag.ACTION_UPDATE_NODE_INFO.value, ParserUtil.parseNodeKeepAliveMessage(mainActivity.getNode()));
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         context.startForegroundService(intentService);
                     } else {

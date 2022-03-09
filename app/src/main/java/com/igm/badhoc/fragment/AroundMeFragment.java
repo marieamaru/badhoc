@@ -16,25 +16,14 @@ import com.igm.badhoc.adapter.NeighborsAdapter;
 import com.igm.badhoc.listener.ItemClickListener;
 import com.igm.badhoc.model.Node;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Fragment that represents the Around Me tab of the application
  */
 public class AroundMeFragment extends Fragment implements ItemClickListener {
     /**
-     * RecyclerView that represents the neighbors around
-     */
-    private RecyclerView neighborsRecyclerView;
-    /**
      * Adapter object that represents the neighbors list
      */
     private NeighborsAdapter neighborsAdapter;
-    /**
-     * The list of neighbors detected around
-     */
-    private List<Node> neighbors;
 
     /**
      * Method that initializes the fragment
@@ -45,13 +34,10 @@ public class AroundMeFragment extends Fragment implements ItemClickListener {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.neighbor_fragment, container, false);
 
-        // recover our Neighbor object
-        neighbors = new ArrayList<>();
-
-        neighborsAdapter = new NeighborsAdapter(neighbors);
+        neighborsAdapter = new NeighborsAdapter();
         neighborsAdapter.setClickListener(this);
 
-        neighborsRecyclerView = view.findViewById(R.id.notif_list);
+        RecyclerView neighborsRecyclerView = view.findViewById(R.id.notif_list);
         neighborsRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         neighborsRecyclerView.setAdapter(neighborsAdapter);
 
@@ -63,8 +49,8 @@ public class AroundMeFragment extends Fragment implements ItemClickListener {
      */
     @Override
     public void onItemClick(View view, int position) {
-        Node node = neighbors.get(position);
-        ((MainActivity) getActivity()).onItemClick(node.getId());
+        Node node = neighborsAdapter.getNeighbors().get(position);
+        ((MainActivity) requireActivity()).onItemClick(node.getId());
     }
 
     /**

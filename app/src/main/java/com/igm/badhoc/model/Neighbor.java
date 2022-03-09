@@ -2,14 +2,14 @@ package com.igm.badhoc.model;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
-import com.igm.badhoc.serializer.NeighborDominatingAdapter;
+import com.igm.badhoc.serializer.NeighborDominatingSerializer;
 
 import java.util.Objects;
 
 /**
  * Class that represents a simplified version of a device
  */
-@JsonAdapter(NeighborDominatingAdapter.class)
+@JsonAdapter(NeighborDominatingSerializer.class)
 public class Neighbor {
     /**
      * Unique id corresponding to the device

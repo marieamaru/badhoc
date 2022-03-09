@@ -1,5 +1,6 @@
 package com.igm.badhoc.fragment;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -43,10 +44,6 @@ import java.util.Map;
 public class PrivateChatFragment extends Fragment {
 
     /**
-     * Debug Tag used in logging
-     */
-    private final String TAG = "PrivateChatFragment";
-    /**
      * RecyclerView that represents the messages in the list
      */
     private RecyclerView privateChatRecyclerView;
@@ -67,15 +64,7 @@ public class PrivateChatFragment extends Fragment {
      * The text zone corresponding to where the message is edited
      */
     private EditText txtMessage;
-    /**
-     * The image on the send button of the fragment
-     */
-    private ImageView btnSend;
-    /**
-     * The image on the image button of the fragment
-     */
-    private ImageView btnImage;
-    private int progress;
+
     private ProgressBar progressBar;
 
     /**
@@ -87,8 +76,8 @@ public class PrivateChatFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
-        btnSend = view.findViewById(R.id.btnSend);
-        btnImage = view.findViewById(R.id.btnImage);
+        ImageView btnSend = view.findViewById(R.id.btnSend);
+        ImageView btnImage = view.findViewById(R.id.btnImage);
         privateChatRecyclerView = view.findViewById(R.id.message_list);
         progressBar = view.findViewById(R.id.progressBar);
         messagesBadhocAdapter = new MessagesBadhocAdapter(currentConversationId);
@@ -102,10 +91,10 @@ public class PrivateChatFragment extends Fragment {
         return view;
     }
 
-    private BroadcastReceiver progressReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver progressReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            progress = intent.getIntExtra(Tag.INTENT_MSG_PROGRESS.value, 0);
+            int progress = intent.getIntExtra(Tag.INTENT_MSG_PROGRESS.value, 0);
             if (progressBar.getVisibility() == View.GONE) {
                 progressBar.setVisibility(View.VISIBLE);
             }
@@ -195,6 +184,7 @@ public class PrivateChatFragment extends Fragment {
     /**
      * Method that adds the list of message to the adapter
      */
+    @SuppressLint("NotifyDataSetChanged")
     public void setBadhocMessages(String conversationId) {
         messagesBadhocAdapter.setBadhocMessages(conversationsMap.get(conversationId));
         messagesBadhocAdapter.notifyDataSetChanged();
@@ -211,6 +201,10 @@ public class PrivateChatFragment extends Fragment {
         }
     }
 
+    /**
+     * Method called when the fragment is destroyed.
+     * Unregisters the BroadcastReceiver that updates the progress bar.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();

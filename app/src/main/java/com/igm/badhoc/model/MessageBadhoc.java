@@ -36,6 +36,9 @@ public class MessageBadhoc implements Serializable {
      * Content of the message
      */
     private final String text;
+    /**
+     * Array of byte containing an image
+     */
     private byte[] data;
 
     /**
@@ -92,10 +95,18 @@ public class MessageBadhoc implements Serializable {
         this.deviceName = deviceName;
     }
 
+    /**
+     * Set data array for data field
+     * @param data data array to set
+     */
     public void setData(byte[] data) {
         this.data = data;
     }
 
+    /**
+     * Getter for data field
+     * @return data array
+     */
     public byte[] getData() {
         return data;
     }

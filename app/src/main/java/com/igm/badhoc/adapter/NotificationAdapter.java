@@ -11,14 +11,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.igm.badhoc.R;
 import com.igm.badhoc.model.Notification;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
     private final List<Notification> notifications;
 
-    public NotificationAdapter(List<Notification> notifications) {
-        this.notifications = notifications;
+    public NotificationAdapter() {
+        this.notifications = new ArrayList<>();
     }
 
     @Override

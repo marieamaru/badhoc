@@ -16,6 +16,7 @@ import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAdapter.MessageViewHolder> implements Serializable {
@@ -24,11 +25,7 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
     private String conversationId;
 
     public MessagesBadhocAdapter(String conversationId) {
-        this.conversationId = conversationId;
-    }
-
-    public MessagesBadhocAdapter(List<MessageBadhoc> badhocMessages, String conversationId) {
-        this.badhocMessages = badhocMessages;
+        this.badhocMessages = new ArrayList<>();
         this.conversationId = conversationId;
     }
 
@@ -100,13 +97,11 @@ public class MessagesBadhocAdapter extends RecyclerView.Adapter<MessagesBadhocAd
         void setMessage(MessageBadhoc message) {
             this.message = message;
             int direction = message.getDirection();
-            //pick image message layout
             if (direction == MessageBadhoc.INCOMING_IMAGE || direction == MessageBadhoc.OUTGOING_IMAGE) {
                 ImageView imageMessage = (ImageView) txtMessage;
                 Bitmap bm = BitmapFactory.decodeByteArray(message.getData(), 0, message.getData().length);
                 imageMessage.setImageBitmap(bm);
             } else {
-                //pick text message layout
                 if (direction == MessageBadhoc.INCOMING_MESSAGE &&
                         conversationId.equals(Tag.BROADCAST_CHAT.value)) {
                     this.deviceMessageName.setText(message.getDeviceName());

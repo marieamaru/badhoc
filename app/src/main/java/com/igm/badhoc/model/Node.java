@@ -1,16 +1,10 @@
 package com.igm.badhoc.model;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonSerializer;
-import com.google.gson.annotations.JsonAdapter;
-import com.igm.badhoc.serializer.NeighborDominantAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Class that represents a device with all its information
@@ -47,11 +41,10 @@ public class Node {
     /**
      * Map of dominated devices around if the current node is dominant
      */
-    private HashMap<String, String> dominating;
+    private final HashMap<String, String> dominating;
     /**
      * Dominant node is the current node is dominated
      */
-    @JsonAdapter(NeighborDominantAdapter.class)
     private Neighbor dominant;
     /**
      * LTE signal of the device
@@ -72,7 +65,7 @@ public class Node {
     /**
      * List of neighbors around the device
      */
-    private List<Neighbor> neighbours;
+    private final List<Neighbor> neighbours;
 
     private Node(final Builder builder) {
         this.id = builder.id;
@@ -81,6 +74,9 @@ public class Node {
         this.neighbours = new ArrayList<>();
         this.dominating = new HashMap<>();
         this.lteSignal = "-1";
+        this.type = "1"; //smartphone
+        this.speed = "0";
+        this.setPosition("0.0", "0.0");
     }
 
     public String getId() {
@@ -115,10 +111,6 @@ public class Node {
         this.macAddress = macAddress;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getLatitude() {
         return latitude;
     }
@@ -138,6 +130,10 @@ public class Node {
 
     public void setLteSignal(String lteSignal) {
         this.lteSignal = lteSignal;
+    }
+
+    public HashMap<String, String> getDominating() {
+        return dominating;
     }
 
     public void addToNeighborhood(Neighbor neighbor) {
@@ -189,34 +185,14 @@ public class Node {
         this.rssi = rssi;
     }
 
+    public String getLteSignal() {
+        return lteSignal;
+    }
+
     @Override
     public String toString() {
         return new Gson().toJson(this);
     }
-
-    /**
-     * Serializing method to form a message of correct format for the nodekeepalive topic
-     *
-     * @return the message to send to the server
-     */
-    public String nodeKeepAliveMessage() {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-
-        JsonSerializer<HashMap<String, Object>> serializer =
-                (src, typeOfSrc, context) -> {
-                    if (src == null) {
-                        return null;
-                    }
-                    JsonArray jsonMacAddress = new JsonArray();
-                    for (Map.Entry<String, Object> entry : src.entrySet()) {
-                        jsonMacAddress.add("" + entry.getValue());
-                    }
-                    return jsonMacAddress;
-                };
-        gsonBuilder.registerTypeAdapter(HashMap.class, serializer);
-        return gsonBuilder.create().toJson(this);
-    }
-
 
     public static Builder builder(final String id, final String deviceName) {
         return new Builder(id, deviceName);

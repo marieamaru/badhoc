@@ -19,10 +19,9 @@ import androidx.core.app.NotificationCompat;
 import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
-import com.google.gson.Gson;
 import com.igm.badhoc.R;
-import com.igm.badhoc.model.ServerNotification;
 import com.igm.badhoc.model.Tag;
+import com.igm.badhoc.util.ParserUtil;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -69,17 +68,9 @@ public class ServerService extends Service {
      */
     private final Intent intent = new Intent(Tag.INTENT_SERVER_SERVICE.value);
     /**
-     * Name of the topic to subscribe to
-     */
-    private final String subscribeTopic = "notifs";
-    /**
-     * Name of the topic to publish on
-     */
-    private final String publishTopic = "nodekeepalive";
-    /**
      * URL of the remote server to connect to
      */
-    private final String url = "ssl://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
+    private static final String url = "ssl://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
     /**
      * Recurring timer that publishes a message
      */
@@ -200,14 +191,13 @@ public class ServerService extends Service {
         public void messageArrived(String topic, MqttMessage message) {
             Log.i(TAG, "topic: " + topic + ", msg: " + new String(message.getPayload()));
             String messageReceived = new String(message.getPayload());
-            String parsedResponse = parseNotifsResponse(messageReceived);
+            String parsedResponse = ParserUtil.parseTopicNotifsResponse(messageReceived);
             sendBroadcast(intent.putExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value, parsedResponse));
             broadcastMessageFromServer(parsedResponse);
         }
 
         /**
          * Method called when a message is successfully delivered to a topic
-         * @param token
          */
         @Override
         public void deliveryComplete(IMqttDeliveryToken token) {
@@ -222,21 +212,18 @@ public class ServerService extends Service {
         /**
          * Method called if the connection is successful :
          * the service then subscribes to the topic and updates the title of the notification fragment
-         * @param asyncActionToken
          */
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
             // We are connected
             Log.i(TAG, "Connected to server " + client.isConnected());
-            subscribeToTopic(subscribeTopic);
+            subscribeToTopic(Tag.TOPIC_NOTIFS.value);
             sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_DOMINANT.value));
         }
 
         /**
          * Method called on failure of the connection :
          * the service tries to reconnect
-         * @param asyncActionToken
-         * @param exception
          */
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
@@ -347,7 +334,6 @@ public class ServerService extends Service {
      * @param crtFile   client certificate
      * @param keyFile   client private key
      * @return SSLSocketFactory for the connection
-     * @throws CertificateException
      */
     private SSLSocketFactory setCertificate(InputStream caCrtFile, InputStream crtFile, InputStream keyFile) throws CertificateException {
         Security.addProvider(new BouncyCastleProvider());
@@ -407,17 +393,11 @@ public class ServerService extends Service {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                publishMessage(publishTopic, messageJson);
+                publishMessage(Tag.TOPIC_KEEP_ALIVE.value, messageJson);
             }
         };
         timer = new Timer();
         timer.scheduleAtFixedRate(timerTask, 30000, 60000);
-    }
-
-    private String parseNotifsResponse(String notification) {
-        Gson gson = new Gson();
-        ServerNotification serverNotification = gson.fromJson(notification, ServerNotification.class);
-        return serverNotification.getNotif();
     }
 
     /**

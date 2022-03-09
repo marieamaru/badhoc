@@ -77,19 +77,15 @@ public class LocationService extends Service implements LocationListener {
 
     /**
      * Method that collects the location and speed of the device
-     *
-     * @return
      */
-    public Location getLocation() {
+    public void getLocation() {
         try {
             locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
             isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             isNetworkEnabled = locationManager
                     .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-            if (!isGPSEnabled && !isNetworkEnabled) {
-                // no network provider is enabled
-            } else {
+            if (isGPSEnabled || isNetworkEnabled) {
                 this.canGetLocation = true;
                 // First get location from Network Provider
                 if (isNetworkEnabled) {
@@ -137,7 +133,6 @@ public class LocationService extends Service implements LocationListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return location;
     }
 
     /**

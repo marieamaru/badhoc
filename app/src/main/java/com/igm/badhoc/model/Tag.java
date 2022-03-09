@@ -5,7 +5,9 @@ package com.igm.badhoc.model;
  */
 public enum Tag {
 
-    BROADCAST_CHAT("Broadcast"),
+    BROADCAST_CHAT("broadcast"),
+    PRIVATE_CHAT("private_chat"),
+
     PAYLOAD_DEVICE_NAME("device_name"),
     PAYLOAD_MAC_ADDRESS("device_mac_address"),
     PAYLOAD_TEXT("text"),
@@ -28,6 +30,8 @@ public enum Tag {
     ACTION_UPDATE_NODE_INFO("action_update_node_info"),
     ACTION_CHANGE_TITLE("change_title"),
 
+    TOPIC_NOTIFS("notifs"),
+    TOPIC_KEEP_ALIVE("nodekeepalive"),
     TITLE_NOT_DOMINANT("Notifications from dominant"),
     TITLE_DOMINANT("Notifications from server");
 

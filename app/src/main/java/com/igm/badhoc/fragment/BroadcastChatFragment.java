@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,16 +21,13 @@ import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Fragment that represents the Broadcast tab of the application
  */
 public class BroadcastChatFragment extends Fragment {
 
-    private final String TAG = "BroadcastChatFragment";
     /**
      * RecyclerView that represents the messages in the list
      */
@@ -40,27 +36,11 @@ public class BroadcastChatFragment extends Fragment {
      * Adapter object that represents the messages list
      */
     private MessagesBadhocAdapter messagesBadhocAdapter;
-    /**
-     * The list of messages sent and received
-     */
-    private List<MessageBadhoc> badhocMessages;
-    /**
-     * The id of the Broadcast conversation
-     */
-    private String conversationId;
+
     /**
      * The text zone corresponding to where the message is edited
      */
     private EditText txtMessage;
-    /**
-     * The image on the send button of the fragment
-     */
-    private ImageView btnSend;
-    /**
-     * The image on the image button of the fragment
-     */
-    private ImageView btnImage;
-    private ProgressBar progressBar;
 
     /**
      * Method that initializes the fragment
@@ -71,16 +51,14 @@ public class BroadcastChatFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
-        btnSend = view.findViewById(R.id.btnSend);
-        btnImage = view.findViewById(R.id.btnImage);
+        ImageView btnSend = view.findViewById(R.id.btnSend);
+        ImageView btnImage = view.findViewById(R.id.btnImage);
         broadcastRecyclerView = view.findViewById(R.id.message_list);
-        progressBar = view.findViewById(R.id.progressBar);
+        // ProgressBar progressBar = view.findViewById(R.id.progressBar);
         btnSend.setOnClickListener(this::onMessageSend);
         btnImage.setVisibility(View.GONE);
-        conversationId = Tag.BROADCAST_CHAT.value;
-        badhocMessages = new ArrayList<>();
         broadcastRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        messagesBadhocAdapter = new MessagesBadhocAdapter(badhocMessages, conversationId);
+        messagesBadhocAdapter = new MessagesBadhocAdapter(Tag.BROADCAST_CHAT.value);
         broadcastRecyclerView.setAdapter(messagesBadhocAdapter);
         return view;
     }
