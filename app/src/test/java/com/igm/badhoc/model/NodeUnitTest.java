@@ -27,14 +27,6 @@ public class NodeUnitTest {
     }
 
     @Test
-    public void createNodeTestWithoutPosition() {
-        final Node node = Node.builder("123", "testDevice").build();
-        assertNotNull(node);
-        assertThat(node.getLatitude()).isEqualTo("0.0");
-        assertThat(node.getLongitude()).isEqualTo("0.0");
-    }
-
-    @Test
     public void addToDominatingTest(){
         final Node node = Node.builder("123", "testDevice").build();
         assertThat(node.getDominating()).isEmpty();

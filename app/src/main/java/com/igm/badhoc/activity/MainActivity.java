@@ -318,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     /**
      * Method to send a broadcast intent from the main activity
      */
-    public void broadcastIntentAction(String action, String content) {
+    public void broadcastIntentAction (String action, String content) {
         this.intent.putExtra(action, content);
         sendBroadcast(this.intent);
     }

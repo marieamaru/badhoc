@@ -5,7 +5,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonSerializer;
 import com.igm.badhoc.model.Node;
-import com.igm.badhoc.model.ServerNotification;
+import com.igm.badhoc.model.FromServerNotification;
+import com.igm.badhoc.model.ToServerNotification;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,18 @@ public class ParserUtil {
      */
     public static String parseTopicNotifsResponse(final String notification) {
         Gson gson = new Gson();
-        ServerNotification serverNotification = gson.fromJson(notification, ServerNotification.class);
-        return serverNotification.getNotif();
+        FromServerNotification fromServerNotification = gson.fromJson(notification, FromServerNotification.class);
+        return fromServerNotification.getNotif();
+    }
+
+    /**
+     * Parser method to form a message of correct format for the ??? topic
+     *
+     * @param toServerNotification message to parse
+     * @return the message sent to the server
+     */
+    public static String parseMessageForServer(final ToServerNotification toServerNotification) {
+        Gson gson = new Gson();
+        return gson.toJson(toServerNotification);
     }
 }

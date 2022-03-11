@@ -90,7 +90,7 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         ViewHolder(View view) {
             super(view);
             mAvatar = view.findViewById(R.id.peerAvatar);
-            mContentView = view.findViewById(R.id.notification);
+            mContentView = view.findViewById(R.id.device_name);
             itemView.setOnClickListener(view1 -> mClickListener.onItemClick(view1, getAdapterPosition()));
         }
 

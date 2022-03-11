@@ -11,7 +11,7 @@ import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Neighbor;
 import com.igm.badhoc.model.Node;
-import com.igm.badhoc.model.Notification;
+import com.igm.badhoc.model.NotificationDisplay;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.util.ParserUtil;
@@ -69,17 +69,20 @@ public class MessageListenerImpl extends MessageListener {
         } else {
             String messageType = messageContent.get(Tag.PAYLOAD_PRIVATE_TYPE.value);
             String incomingMessage = messageContent.get(Tag.PAYLOAD_TEXT.value);
-            mainActivity.displayNotificationBadge(Tag.PRIVATE_CHAT.value);
             if (Tag.PAYLOAD_TEXT.value.equals(messageType)) {
                 MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
                 messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
                 mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+                mainActivity.displayNotificationBadge(Tag.PRIVATE_CHAT.value);
+            }else if (Tag.PAYLOAD_MESSAGE_TO_SERVER.value.equals(messageType)){
+                mainActivity.broadcastIntentAction(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value, incomingMessage);
             } else {
                 byte[] fileBytes = message.getData();
                 MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
                 messageBadhoc.setData(fileBytes);
                 messageBadhoc.setDirection(MessageBadhoc.INCOMING_IMAGE);
                 mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+                mainActivity.displayNotificationBadge(Tag.PRIVATE_CHAT.value);
             }
             Log.d(TAG, "Incoming private message: " + incomingMessage);
         }
@@ -118,7 +121,9 @@ public class MessageListenerImpl extends MessageListener {
             mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
         }
         if (Tag.PAYLOAD_FROM_SERVER.value.equals(broadcastType)) {
-            mainActivity.getNotificationFragment().addNotification(new Notification(incomingMsg));
+            NotificationDisplay notificationDisplay = new NotificationDisplay(incomingMsg);
+            notificationDisplay.setDirection(NotificationDisplay.INCOMING_MESSAGE);
+            mainActivity.getNotificationFragment().addNotification(notificationDisplay);
             mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
         }
         if (Tag.PAYLOAD_NO_LONGER_DOMINANT.value.equals(broadcastType)) {

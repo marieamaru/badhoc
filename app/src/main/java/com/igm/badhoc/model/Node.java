@@ -76,7 +76,6 @@ public class Node {
         this.lteSignal = "-1";
         this.type = "1"; //smartphone
         this.speed = "0";
-        this.setPosition("0.0", "0.0");
     }
 
     public String getId() {
@@ -141,11 +140,13 @@ public class Node {
     }
 
     public void removeFromNeighborhood(String id) {
+        List<Neighbor> toRemove = new ArrayList<>();
         for (Neighbor n : this.neighbours) {
             if (n.getId().equals(id)) {
-                this.neighbours.remove(n);
+                toRemove.add(n);
             }
         }
+        this.neighbours.removeAll(toRemove);
     }
 
     public void addToDominating(String senderId, String macAddress) {

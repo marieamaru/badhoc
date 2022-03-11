@@ -38,15 +38,6 @@ public class DeviceUtilIntegrationTest {
     }
 
     @Test
-    public void getRssiTest() {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        float rssi = DeviceUtil.getRssi(appContext);
-        assertThat(rssi).isNotNull();
-        assertThat(rssi).isInstanceOf(Float.class);
-        assertThat(rssi).isNegative();
-    }
-
-    @Test
     public void isConnectedToInternetTest() {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         boolean isConnectedToInternet = DeviceUtil.isConnectedToInternet(appContext);

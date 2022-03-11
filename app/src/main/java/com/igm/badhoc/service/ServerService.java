@@ -171,7 +171,7 @@ public class ServerService extends Service {
     MqttCallback mqttCallback = new MqttCallback() {
         /**
          * Method called if the connection is lost
-         * @param cause cause of the end of the connection
+         * @param cause cause of the end of the connec<stion
          */
         @Override
         public void connectionLost(Throwable cause) {
@@ -250,6 +250,7 @@ public class ServerService extends Service {
             options.setSocketFactory(sslSocketFactory);
         } catch (CertificateException e) {
             e.printStackTrace();
+            Log.e(TAG, "error certificate");
         }
 
         client.setCallback(mqttCallback);
@@ -270,7 +271,6 @@ public class ServerService extends Service {
      */
     public void publishMessage(final String publishTopic, final String messageJson) {
         if (client.isConnected() && !messageJson.equals("{}")) {
-            Log.i(TAG, "in publish and message is updated " + messageJson);
             try {
                 MqttMessage message = new MqttMessage();
                 message.setPayload(messageJson.getBytes());
@@ -320,10 +320,17 @@ public class ServerService extends Service {
 
     /**
      * BroadcastReceiver object that listens for updates of the node content from the main activity
+     * or for a message to send to the server
      */
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
+            if(intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value)!= null){
+                messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
+            }
+            if (intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value)!= null){
+                String messageForServerJson = intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value);
+                publishMessage(Tag.TOPIC_TO_SERVER.value, messageForServerJson);
+            }
         }
     };
 

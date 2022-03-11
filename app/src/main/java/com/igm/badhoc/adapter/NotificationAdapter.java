@@ -9,14 +9,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.igm.badhoc.R;
-import com.igm.badhoc.model.Notification;
+import com.igm.badhoc.model.NotificationDisplay;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
-    private final List<Notification> notifications;
+    private final List<NotificationDisplay> notifications;
 
     public NotificationAdapter() {
         this.notifications = new ArrayList<>();
@@ -27,16 +27,33 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
-    public void addNotification(Notification notification) {
+    public void addNotification(NotificationDisplay notification) {
         this.notifications.add(notification);
         notifyItemInserted(this.notifications.size() - 1);
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return notifications.get(position).getDirection();
+    }
+
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View messageView = null;
+
+        switch (viewType) {
+            case NotificationDisplay.INCOMING_MESSAGE:
+                messageView = LayoutInflater.from(parent.getContext()).
+                        inflate((R.layout.notification_row_incoming), parent, false);
+                break;
+            case NotificationDisplay.OUTGOING_MESSAGE:
+                messageView = LayoutInflater.from(parent.getContext()).
+                        inflate((R.layout.notification_row_outgoing), parent, false);
+                break;
+        }
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.notification_row, parent, false);
+                .inflate(R.layout.notification_row_incoming, parent, false);
         return new ViewHolder(view);
     }
 

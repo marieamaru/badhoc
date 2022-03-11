@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.igm.badhoc.model.Neighbor;
 import com.igm.badhoc.model.Node;
+import com.igm.badhoc.model.ToServerNotification;
 
 import org.junit.Test;
 
@@ -46,5 +47,17 @@ public class ParserUtilUnitTest {
         assertThat(parsedTopicResponse).isNotBlank();
         assertThat(parsedTopicResponse).isNotEmpty();
         assertThat(parsedTopicResponse).isEqualTo(expectedParsedTopicResponse);
+    }
+
+    @Test
+    public void parseTopicServerMessageTest(){
+        final String message = "Ceci est un test";
+        final String address = "00:00:00:00:00:00";
+        final ToServerNotification toServerNotification = new ToServerNotification(address, message);
+        final String parsedTopicMessage = ParserUtil.parseMessageForServer(toServerNotification);
+        final String expectedParsedTopicMessage = "{\"macAddress\":\"00:00:00:00:00:00\",\"message\":\"Ceci est un test\"}";
+        assertThat(parsedTopicMessage).isNotBlank();
+        assertThat(parsedTopicMessage).isNotEmpty();
+        assertThat(parsedTopicMessage).isEqualTo(expectedParsedTopicMessage);
     }
 }
