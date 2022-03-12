@@ -3,9 +3,11 @@ package com.igm.badhoc.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 
 public class NeighborUnitTest {
     @Test
+    @DisplayName("Test for constructor")
     public void test() {
         final String id = "1";
         final int rssi = -1;
@@ -18,6 +20,7 @@ public class NeighborUnitTest {
     }
 
     @Test
+    @DisplayName("Test equal")
     public void equalTest() {
         final String id = "1";
         final int rssi = -1;
@@ -28,6 +31,7 @@ public class NeighborUnitTest {
     }
 
     @Test
+    @DisplayName("Test not equals")
     public void notEqualTest() {
         final String id = "1";
         final int rssi = -1;
@@ -39,6 +43,7 @@ public class NeighborUnitTest {
     }
 
     @Test
+    @DisplayName("Test hashcode")
     public void hashTest() {
         final String id = "1";
         final int rssi = -1;

@@ -8,10 +8,12 @@ import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.ToServerNotification;
 
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 
 public class ParserUtilUnitTest {
 
     @Test
+    @DisplayName("Test for empty dominating list in node object")
     public void nodeKeepAliveMessageTestNoDominating() {
         final Node node = Node.builder("123", "testDevice").build();
         node.setIsDominant(1);
@@ -25,6 +27,7 @@ public class ParserUtilUnitTest {
     }
 
     @Test
+    @DisplayName("Test for not empty dominating list in node object")
     public void nodeKeepAliveMessageTestWithDominating() {
         final Node node = Node.builder("123", "testDevice").build();
         node.setIsDominant(1);
@@ -40,6 +43,7 @@ public class ParserUtilUnitTest {
     }
 
     @Test
+    @DisplayName("Test for parser of notifs topic response")
     public void parseTopicNotifsResponseTest() {
         final String topicResponse = "{\"dominant\":\"00:00:00:00:00:00\",\"notif\":\"Spectacle de magie demain.\"}";
         final String parsedTopicResponse = ParserUtil.parseTopicNotifsResponse(topicResponse);
@@ -50,6 +54,7 @@ public class ParserUtilUnitTest {
     }
 
     @Test
+    @DisplayName("Test for parser of sending topic message")
     public void parseTopicServerMessageTest(){
         final String message = "Ceci est un test";
         final String address = "00:00:00:00:00:00";
