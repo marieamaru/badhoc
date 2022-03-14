@@ -1,5 +1,8 @@
 package com.igm.badhoc.activity;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -11,6 +14,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -318,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     /**
      * Method to send a broadcast intent from the main activity
      */
-    public void broadcastIntentAction (String action, String content) {
+    public void broadcastIntentAction(String action, String content) {
         this.intent.putExtra(action, content);
         sendBroadcast(this.intent);
     }
@@ -365,14 +370,34 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         timer.scheduleAtFixedRate(timerTask, 0, 10000);
     }
 
+    private void printNotify(String str) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String NOTIFICATION_CHANNEL_ID = "com.igm.badhoc";
+            String channelName = "Message channel";
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            assert manager != null;
+            manager.createNotificationChannel(channel);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+            builder.setContentTitle("New Message")
+                    .setContentText(str)
+                    .setSmallIcon(R.drawable.badhoc)
+                    .setAutoCancel(true);
+            NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
+            managerCompat.notify(1, builder.build());
+        }
+    }
+
     public void displayNotificationBadge(String id) {
         switch (id) {
             case "broadcast":
                 if (currentFragment != broadcastChatFragment)
                     badgeDrawableBroadcast.setVisible(true);
+                printNotify("You received a new broadcast message.");
                 break;
             case "private_chat":
                 badgeDrawablePrivateChat.setVisible(true);
+                printNotify("You received a new private message.");
                 break;
         }
     }

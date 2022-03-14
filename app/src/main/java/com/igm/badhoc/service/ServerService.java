@@ -118,8 +118,8 @@ public class ServerService extends Service {
      */
     private void handleApiAbove26() {
         if (Build.VERSION.SDK_INT >= 26) {
-            String NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
-            String channelName = "My Background Service";
+            String NOTIFICATION_CHANNEL_ID = "com.igm.badhoc";
+            String channelName = "Server Service";
             NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
             chan.setLightColor(Color.BLUE);
             chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);

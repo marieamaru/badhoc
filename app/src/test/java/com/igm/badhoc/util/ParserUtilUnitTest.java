@@ -20,7 +20,7 @@ public class ParserUtilUnitTest {
         node.setMacAddress("00:00:00:00:00:00");
         node.setRssi(-1);
         final String nodeKeepAliveMessage = ParserUtil.parseNodeKeepAliveMessage(node);
-        final String expectedMessage = "{\"type\":\"1\",\"speed\":\"0\",\"isdominant\":1,\"dominating\":[],\"lteSignal\":\"-1\",\"macAddress\":\"00:00:00:00:00:00\",\"latitude\":\"0.0\",\"longitude\":\"0.0\",\"neighbours\":[]}";
+        final String expectedMessage = "{\"type\":\"1\",\"speed\":\"0\",\"isdominant\":1,\"dominating\":[],\"lteSignal\":\"-1\",\"macAddress\":\"00:00:00:00:00:00\",\"neighbours\":[]}";
         assertNotNull(node);
         assertThat(nodeKeepAliveMessage).isNotEmpty();
         assertThat(nodeKeepAliveMessage).isEqualTo(expectedMessage);
@@ -36,7 +36,7 @@ public class ParserUtilUnitTest {
         node.addToDominating("1", "00:00:00:00:00:01");
         node.addToNeighborhood(new Neighbor("1", "00:00:00:00:00:01", -2));
         final String nodeKeepAliveMessage = ParserUtil.parseNodeKeepAliveMessage(node);
-        final String expectedMessage = "{\"type\":\"1\",\"speed\":\"0\",\"isdominant\":1,\"dominating\":[\"00:00:00:00:00:01\"],\"lteSignal\":\"-1\",\"macAddress\":\"00:00:00:00:00:00\",\"latitude\":\"0.0\",\"longitude\":\"0.0\",\"neighbours\":[{\"macAddress\":\"00:00:00:00:00:01\",\"RSSI\":-2.0}]}";
+        final String expectedMessage = "{\"type\":\"1\",\"speed\":\"0\",\"isdominant\":1,\"dominating\":[\"00:00:00:00:00:01\"],\"lteSignal\":\"-1\",\"macAddress\":\"00:00:00:00:00:00\",\"neighbours\":[{\"macAddress\":\"00:00:00:00:00:01\",\"RSSI\":-2.0}]}";
         assertNotNull(node);
         assertThat(nodeKeepAliveMessage).isNotEmpty();
         assertThat(nodeKeepAliveMessage).isEqualTo(expectedMessage);

@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -31,6 +33,7 @@ import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -138,19 +141,17 @@ public class PrivateChatFragment extends Fragment {
                 public void onActivityResult(Uri uri) {
                     try {
                         InputStream inputStream = requireActivity().getContentResolver().openInputStream(uri);
-                        byte[] fileContent = new byte[inputStream.available()];
-                        inputStream.read(fileContent);
                         String filePath = uri.getPath();
-
+                        byte[] byteArray = resizeImage(inputStream);
                         HashMap<String, Object> content = new HashMap<>();
                         content.put(Tag.PAYLOAD_TEXT.value, filePath);
                         content.put(Tag.PAYLOAD_PRIVATE_TYPE.value, Tag.PAYLOAD_IMAGE.value);
                         Message.Builder builder = new Message.Builder();
-                        Message message = builder.setReceiverId(currentConversationId).setContent(content).setData(fileContent).build();
+                        Message message = builder.setReceiverId(currentConversationId).setContent(content).setData(byteArray).build();
                         message.setUuid(Bridgefy.sendMessage(message));
                         MessageBadhoc messageImage = new MessageBadhoc(filePath);
                         messageImage.setDirection(MessageBadhoc.OUTGOING_IMAGE);
-                        messageImage.setData(fileContent);
+                        messageImage.setData(byteArray);
                         addMessage(messageImage, currentConversationId);
                         progressBar.setVisibility(View.VISIBLE);
                     } catch (IOException e) {
@@ -158,6 +159,14 @@ public class PrivateChatFragment extends Fragment {
                     }
                 }
             });
+
+    public byte[] resizeImage(InputStream inputStream) {
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 5, stream);
+        bitmap.recycle();
+        return stream.toByteArray();
+    }
 
     /**
      * Method to add a message and its conversation id to the map and update the adapter
