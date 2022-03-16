@@ -19,15 +19,5 @@ public class DeviceUtilUnitTest {
         assertThat(macAddress).hasSize(addressModel.length());
     }
 
-    @Test
-    @DisplayName("Test getRealMacAddress")
-    public void getRealMacAddressTest() {
-        final String realMacAddress = DeviceUtil.getRealMacAddress();
-        final String addressModel = "00:00:00:00:00:00";
-        assertNotNull(realMacAddress);
-        assertThat(realMacAddress).isNotEmpty();
-        assertThat(realMacAddress).hasSize(addressModel.length());
-    }
-
 
 }
