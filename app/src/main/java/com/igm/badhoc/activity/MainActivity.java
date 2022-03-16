@@ -1,6 +1,5 @@
 package com.igm.badhoc.activity;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -108,6 +107,10 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      * Badge notifying a new private chat message is available on the fragment display
      */
     private BadgeDrawable badgeDrawablePrivateChat;
+    /**
+     * OnPause flag to enable or disable push notifications
+     */
+    private boolean onPause;
 
 
     @Override
@@ -138,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         badgeDrawableBroadcast.setVisible(false);
         badgeDrawablePrivateChat.setVisible(false);
 
+        onPause = false;
         timer = new Timer();
         initializeBridgefy();
 
@@ -206,6 +210,24 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         stopService(notificationFragment.getIntentService());
         if (isFinishing())
             Bridgefy.stop();
+    }
+
+    /**
+     * On pause of the main activity : set the onPause flag to true to enable push notifications
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        onPause = true;
+    }
+
+    /**
+     * On resume of the main activity : set the onPause flag to false to disable push notifications
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        onPause = false;
     }
 
     /**
@@ -370,34 +392,45 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         timer.scheduleAtFixedRate(timerTask, 0, 10000);
     }
 
+    /**
+     * If the application is onPause, displays a push notification for certain events
+     * @param str message to print on notifications
+     */
     private void printNotify(String str) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String NOTIFICATION_CHANNEL_ID = "com.igm.badhoc";
-            String channelName = "Message channel";
-            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT);
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            assert manager != null;
-            manager.createNotificationChannel(channel);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-            builder.setContentTitle("New Message")
-                    .setContentText(str)
-                    .setSmallIcon(R.drawable.badhoc)
-                    .setAutoCancel(true);
-            NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
-            managerCompat.notify(1, builder.build());
+        if (onPause) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                String NOTIFICATION_CHANNEL_ID = "com.igm.badhoc";
+                String channelName = "Message channel";
+                NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationManager manager = getSystemService(NotificationManager.class);
+                assert manager != null;
+                manager.createNotificationChannel(channel);
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+                builder.setContentTitle("New Message")
+                        .setContentText(str)
+                        .setSmallIcon(R.drawable.badhoc)
+                        .setAutoCancel(true);
+                NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
+                managerCompat.notify(1, builder.build());
+            }
         }
     }
 
+    /**
+     * Displays a visual red dot when a private or broadcast message is available,
+     * and if the application is onPause, print a push notification
+     * @param id tab to display the red badge on
+     */
     public void displayNotificationBadge(String id) {
         switch (id) {
             case "broadcast":
                 if (currentFragment != broadcastChatFragment)
                     badgeDrawableBroadcast.setVisible(true);
-                printNotify("You received a new broadcast message.");
+                printNotify(getResources().getString(R.string.push_notification_public));
                 break;
             case "private_chat":
                 badgeDrawablePrivateChat.setVisible(true);
-                printNotify("You received a new private message.");
+                printNotify(getResources().getString(R.string.push_notification_private));
                 break;
         }
     }

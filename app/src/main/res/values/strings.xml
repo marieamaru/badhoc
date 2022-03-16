@@ -6,4 +6,6 @@
     <string name="broadcast">Broadcast</string>
     <string name="registration_error">A registration occurred. Make sure you\'re online the first time
     that you install this sample app</string>
+    <string name="push_notification_private">You received a new private message.</string>
+    <string name="push_notification_public">You received a new broadcast message.</string>
 </resources>
