@@ -25,7 +25,6 @@ public class DeviceUtilUnitTest {
         final String realMacAddress = DeviceUtil.getRealMacAddress();
         final String addressModel = "00:00:00:00:00:00";
         assertNotNull(realMacAddress);
-        assertThat(realMacAddress).isNotBlank();
         assertThat(realMacAddress).isNotEmpty();
         assertThat(realMacAddress).hasSize(addressModel.length());
     }
