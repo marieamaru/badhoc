@@ -58,7 +58,6 @@ public class PrivateChatFragment extends Fragment {
      * The map object of messages sent and received associated to its conversation id
      */
     private Map<String, List<MessageBadhoc>> conversationsMap;
-
     /**
      * The id of the current conversation
      */
@@ -67,7 +66,9 @@ public class PrivateChatFragment extends Fragment {
      * The text zone corresponding to where the message is edited
      */
     private EditText txtMessage;
-
+    /**
+     * Progress bar displayed when an image is sent
+     */
     private ProgressBar progressBar;
 
     /**

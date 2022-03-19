@@ -74,7 +74,7 @@ public class MessageListenerImpl extends MessageListener {
                 messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
                 mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
                 mainActivity.displayNotificationBadge(Tag.PRIVATE_CHAT.value);
-            }else if (Tag.PAYLOAD_MESSAGE_TO_SERVER.value.equals(messageType)){
+            } else if (Tag.PAYLOAD_MESSAGE_TO_SERVER.value.equals(messageType)) {
                 mainActivity.broadcastIntentAction(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value, incomingMessage);
             } else {
                 byte[] fileBytes = message.getData();

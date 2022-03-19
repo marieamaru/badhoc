@@ -35,20 +35,19 @@
         android:id="@+id/txtMessage"
         android:layout_width="200dp"
         android:layout_height="66dp"
-        android:layout_marginEnd="23dp"
         android:layout_weight="1"
         android:hint="@string/placeholder"
         android:textColor="#CFD8DC"
         android:textColorHint="#CFD8DC"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btnImage"
+        app:layout_constraintEnd_toStartOf="@+id/guideline10"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline2" />
 
     <ImageView
         android:id="@+id/btnSend"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:padding="4dp"
         android:src="@drawable/ic_send"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -68,16 +67,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_begin="306dp" />
+        app:layout_constraintGuide_begin="290dp" />
 
     <ImageView
         android:id="@+id/btnImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btnSend"
-        app:layout_constraintStart_toEndOf="@+id/txtMessage"
+        app:layout_constraintEnd_toStartOf="@+id/guideline3"
+        app:layout_constraintStart_toStartOf="@+id/guideline10"
         app:layout_constraintTop_toTopOf="@+id/guideline2"
         app:srcCompat="@drawable/ic_image" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="245dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

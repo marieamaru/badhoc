@@ -36,6 +36,7 @@ import com.igm.badhoc.fragment.NotificationFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
 import com.igm.badhoc.listener.MessageListenerImpl;
 import com.igm.badhoc.listener.StateListenerImpl;
+import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
@@ -43,6 +44,8 @@ import com.igm.badhoc.service.LocationService;
 import com.igm.badhoc.util.DeviceUtil;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -125,8 +128,8 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
         currentFragment = aroundMeFragment;
 
-        fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastChatFragment, TAG).hide(broadcastChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, aroundMeFragment, TAG).commit();
+        fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastChatFragment, TAG).hide(broadcastChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, privateChatFragment, TAG).hide(privateChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, notificationFragment, TAG).hide(notificationFragment).commit();
 
