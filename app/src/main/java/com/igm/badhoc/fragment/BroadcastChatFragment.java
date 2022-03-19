@@ -21,9 +21,7 @@ import com.igm.badhoc.adapter.MessagesBadhocAdapter;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Tag;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Fragment that represents the Broadcast tab of the application
@@ -38,22 +36,11 @@ public class BroadcastChatFragment extends Fragment {
      * Adapter object that represents the messages list
      */
     private MessagesBadhocAdapter messagesBadhocAdapter;
-    /**
-     * The list of messages sent and received
-     */
-    private List<MessageBadhoc> badhocMessages;
-    /**
-     * The id of the Broadcast conversation
-     */
-    private String conversationId;
+
     /**
      * The text zone corresponding to where the message is edited
      */
     private EditText txtMessage;
-    /**
-     * The image on the send button of the fragment
-     */
-    private ImageView btnSend;
 
     /**
      * Method that initializes the fragment
@@ -64,16 +51,15 @@ public class BroadcastChatFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.activity_chat, container, false);
         txtMessage = view.findViewById(R.id.txtMessage);
-        btnSend = view.findViewById(R.id.btnSend);
+        ImageView btnSend = view.findViewById(R.id.btnSend);
+        ImageView btnImage = view.findViewById(R.id.btnImage);
         broadcastRecyclerView = view.findViewById(R.id.message_list);
-
+        // ProgressBar progressBar = view.findViewById(R.id.progressBar);
         btnSend.setOnClickListener(this::onMessageSend);
-        conversationId = Tag.BROADCAST_CHAT.value;
-        badhocMessages = new ArrayList<>();
+        btnImage.setVisibility(View.GONE);
         broadcastRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        messagesBadhocAdapter = new MessagesBadhocAdapter(badhocMessages, conversationId);
+        messagesBadhocAdapter = new MessagesBadhocAdapter(Tag.BROADCAST_CHAT.value);
         broadcastRecyclerView.setAdapter(messagesBadhocAdapter);
-
         return view;
     }
 

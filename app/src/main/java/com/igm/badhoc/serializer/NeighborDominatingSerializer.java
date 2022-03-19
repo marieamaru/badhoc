@@ -7,7 +7,8 @@ import com.igm.badhoc.model.Neighbor;
 
 import java.io.IOException;
 
-public class NeighborDominatingAdapter extends TypeAdapter<Neighbor> {
+public class NeighborDominatingSerializer extends TypeAdapter<Neighbor> {
+
     @Override
     public void write(JsonWriter writer, Neighbor src) throws IOException {
         writer.beginObject();

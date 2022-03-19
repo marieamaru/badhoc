@@ -16,6 +16,7 @@ import com.igm.badhoc.listener.ItemClickListener;
 import com.igm.badhoc.model.Node;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.ViewHolder> implements Serializable {
@@ -23,8 +24,8 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
     private final List<Node> neighbors;
     private ItemClickListener mClickListener;
 
-    public NeighborsAdapter(List<Node> nodes) {
-        this.neighbors = nodes;
+    public NeighborsAdapter() {
+        this.neighbors = new ArrayList<>();
     }
 
     @Override
@@ -61,6 +62,10 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         return -1;
     }
 
+    public List<Node> getNeighbors() {
+        return neighbors;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -85,7 +90,7 @@ public class NeighborsAdapter extends RecyclerView.Adapter<NeighborsAdapter.View
         ViewHolder(View view) {
             super(view);
             mAvatar = view.findViewById(R.id.peerAvatar);
-            mContentView = view.findViewById(R.id.notification);
+            mContentView = view.findViewById(R.id.device_name);
             itemView.setOnClickListener(view1 -> mClickListener.onItemClick(view1, getAdapterPosition()));
         }
 

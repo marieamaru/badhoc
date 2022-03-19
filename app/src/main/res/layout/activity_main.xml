@@ -12,6 +12,7 @@
         android:layout_width="412dp"
         android:layout_height="80dp"
         android:background="@color/teal_700"
+        app:itemBackground="@color/teal_700"
         app:itemIconTint="@drawable/menu_icon_color"
         app:itemTextColor="@drawable/menu_icon_color"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -71,7 +71,7 @@ public class StateListenerImpl extends StateListener {
                 mainActivity.getNode().removeDominant();
             }
         }
-        Log.i(TAG, "onDeviceLost: " + lostDevice + " \n" + mainActivity.getNode().nodeKeepAliveMessage());
+        Log.i(TAG, "onDeviceLost: " + lostDevice + " \n");
     }
 
     @Override

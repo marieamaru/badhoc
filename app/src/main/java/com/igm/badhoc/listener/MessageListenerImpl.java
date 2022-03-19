@@ -1,6 +1,9 @@
 package com.igm.badhoc.listener;
 
+import android.content.Intent;
 import android.util.Log;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.MessageListener;
@@ -8,13 +11,15 @@ import com.igm.badhoc.activity.MainActivity;
 import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Neighbor;
 import com.igm.badhoc.model.Node;
-import com.igm.badhoc.model.Notification;
+import com.igm.badhoc.model.NotificationDisplay;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
+import com.igm.badhoc.util.ParserUtil;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Implementation of the Bridgefy  message listener
@@ -58,16 +63,30 @@ public class MessageListenerImpl extends MessageListener {
             int neighborStatus = Integer.parseInt(getFromMessage(messageContent, Tag.PAYLOAD_IS_DOMINANT.value));
             handleDominatingStatus(senderId, newNeighbor, neighborStatus);
             handleServer(mainActivity.getNode().isDominant());
-            mainActivity.broadcastIntentAction(Tag.ACTION_UPDATE_NODE_INFO.value, mainActivity.getNode().nodeKeepAliveMessage());
+            mainActivity.broadcastIntentAction(Tag.ACTION_UPDATE_NODE_INFO.value, ParserUtil.parseNodeKeepAliveMessage(mainActivity.getNode()));
             Log.i(TAG, "Peer introduced itself: " + newNode.getMacAddress());
             // any other direct message should be treated as such
         } else {
-            String incomingMessage = (String) message.getContent().get("text");
-            MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
-            messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
-            mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+            String messageType = messageContent.get(Tag.PAYLOAD_PRIVATE_TYPE.value);
+            String incomingMessage = messageContent.get(Tag.PAYLOAD_TEXT.value);
+            if (Tag.PAYLOAD_TEXT.value.equals(messageType)) {
+                MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
+                messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
+                mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+                mainActivity.displayNotificationBadge(Tag.PRIVATE_CHAT.value);
+            } else if (Tag.PAYLOAD_MESSAGE_TO_SERVER.value.equals(messageType)) {
+                mainActivity.broadcastIntentAction(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value, incomingMessage);
+            } else {
+                byte[] fileBytes = message.getData();
+                MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMessage);
+                messageBadhoc.setData(fileBytes);
+                messageBadhoc.setDirection(MessageBadhoc.INCOMING_IMAGE);
+                mainActivity.getPrivateChatFragment().addMessage(messageBadhoc, senderId);
+                mainActivity.displayNotificationBadge(Tag.PRIVATE_CHAT.value);
+            }
             Log.d(TAG, "Incoming private message: " + incomingMessage);
         }
+
     }
 
     /**
@@ -85,21 +104,33 @@ public class MessageListenerImpl extends MessageListener {
         String incomingMsg = (String) message.getContent().get(Tag.PAYLOAD_TEXT.value);
         String deviceName = (String) message.getContent().get(Tag.PAYLOAD_DEVICE_NAME.value);
         String broadcastType = (String) message.getContent().get(Tag.PAYLOAD_BROADCAST_TYPE.value);
-
-        if (broadcastType.equals(Tag.PAYLOAD_REGULAR_BROADCAST.value)) {
+        if (Tag.PAYLOAD_REGULAR_BROADCAST.value.equals(broadcastType)) {
             MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMsg);
             messageBadhoc.setDirection(MessageBadhoc.INCOMING_MESSAGE);
             messageBadhoc.setDeviceName(deviceName);
             mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
+            mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
         }
-        if (broadcastType.equals(Tag.PAYLOAD_FROM_SERVER.value)) {
-            mainActivity.getNotificationFragment().addNotification(new Notification(incomingMsg));
+        if (Tag.PAYLOAD_IMAGE.value.equals(broadcastType)) {
+            byte[] fileBytes = message.getData();
+            MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMsg);
+            messageBadhoc.setData(fileBytes);
+            messageBadhoc.setDeviceName(deviceName);
+            messageBadhoc.setDirection(MessageBadhoc.INCOMING_IMAGE);
+            mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
+            mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
         }
-        if (broadcastType.equals(Tag.PAYLOAD_NO_LONGER_DOMINANT.value)) {
+        if (Tag.PAYLOAD_FROM_SERVER.value.equals(broadcastType)) {
+            NotificationDisplay notificationDisplay = new NotificationDisplay(incomingMsg);
+            notificationDisplay.setDirection(NotificationDisplay.INCOMING_MESSAGE);
+            mainActivity.getNotificationFragment().addNotification(notificationDisplay);
+            mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
+        }
+        if (Tag.PAYLOAD_NO_LONGER_DOMINANT.value.equals(broadcastType)) {
             Log.i(TAG, "received that my dominant is no longer dominant");
             mainActivity.getNode().setDominant(null);
         }
-        if (broadcastType.equals(Tag.PAYLOAD_POTENTIAL_DOMINANT.value)) {
+        if (Tag.PAYLOAD_POTENTIAL_DOMINANT.value.equals(broadcastType)) {
             for (Neighbor neighbor : mainActivity.getNode().getNeighbours()) {
                 if (neighbor.getId().equals(message.getSenderId())) {
                     if (mainActivity.getNode().isDominant() == Status.DOMINATED.value) {
@@ -110,9 +141,26 @@ public class MessageListenerImpl extends MessageListener {
                     break;
                 }
             }
-
         }
-        Log.d(TAG, "Incoming broadcast message: " + incomingMsg);
+        Log.i(TAG, "Incoming broadcast message: " + incomingMsg);
+    }
+
+    /**
+     * Method that determines the progress of the sending of a data type message.
+     * Allows to update the progress bar in the private chat fragment.
+     *
+     * @param message  message sent
+     * @param progress progress of the sending
+     * @param fullSize total size of the message sent
+     */
+    @Override
+    public void onMessageDataProgress(UUID message, long progress, long fullSize) {
+        int currentProgress = (int) ((progress * 100) / fullSize);
+        LocalBroadcastManager.getInstance(mainActivity.getBaseContext()).sendBroadcast(
+                new Intent(Tag.INTENT_MAIN_ACTIVITY.value)
+                        .putExtra(Tag.INTENT_MSG_PROGRESS.value, currentProgress)
+        );
+
     }
 
     /**

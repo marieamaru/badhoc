@@ -19,11 +19,9 @@ import androidx.core.app.NotificationCompat;
 import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.Message;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.igm.badhoc.R;
-import com.igm.badhoc.model.ServerNotification;
 import com.igm.badhoc.model.Tag;
+import com.igm.badhoc.util.ParserUtil;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -70,17 +68,9 @@ public class ServerService extends Service {
      */
     private final Intent intent = new Intent(Tag.INTENT_SERVER_SERVICE.value);
     /**
-     * Name of the topic to subscribe to
-     */
-    private final String subscribeTopic = "notifs";
-    /**
-     * Name of the topic to publish on
-     */
-    private final String publishTopic = "nodekeepalive";
-    /**
      * URL of the remote server to connect to
      */
-    private final String url = "ssl://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
+    private static final String url = "ssl://a162zzet6rcfvu-ats.iot.us-west-2.amazonaws.com:8883";
     /**
      * Recurring timer that publishes a message
      */
@@ -128,8 +118,8 @@ public class ServerService extends Service {
      */
     private void handleApiAbove26() {
         if (Build.VERSION.SDK_INT >= 26) {
-            String NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
-            String channelName = "My Background Service";
+            String NOTIFICATION_CHANNEL_ID = "com.igm.badhoc";
+            String channelName = "Server Service";
             NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
             chan.setLightColor(Color.BLUE);
             chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
@@ -181,7 +171,7 @@ public class ServerService extends Service {
     MqttCallback mqttCallback = new MqttCallback() {
         /**
          * Method called if the connection is lost
-         * @param cause cause of the end of the connection
+         * @param cause cause of the end of the connec<stion
          */
         @Override
         public void connectionLost(Throwable cause) {
@@ -201,14 +191,13 @@ public class ServerService extends Service {
         public void messageArrived(String topic, MqttMessage message) {
             Log.i(TAG, "topic: " + topic + ", msg: " + new String(message.getPayload()));
             String messageReceived = new String(message.getPayload());
-            String parsedResponse = parseNotifsResponse(messageReceived);
+            String parsedResponse = ParserUtil.parseTopicNotifsResponse(messageReceived);
             sendBroadcast(intent.putExtra(Tag.ACTION_NOTIFICATION_RECEIVED.value, parsedResponse));
             broadcastMessageFromServer(parsedResponse);
         }
 
         /**
          * Method called when a message is successfully delivered to a topic
-         * @param token
          */
         @Override
         public void deliveryComplete(IMqttDeliveryToken token) {
@@ -223,21 +212,18 @@ public class ServerService extends Service {
         /**
          * Method called if the connection is successful :
          * the service then subscribes to the topic and updates the title of the notification fragment
-         * @param asyncActionToken
          */
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
             // We are connected
             Log.i(TAG, "Connected to server " + client.isConnected());
-            subscribeToTopic(subscribeTopic);
+            subscribeToTopic(Tag.TOPIC_NOTIFS.value);
             sendBroadcast(intent.putExtra(Tag.ACTION_CHANGE_TITLE.value, Tag.TITLE_DOMINANT.value));
         }
 
         /**
          * Method called on failure of the connection :
          * the service tries to reconnect
-         * @param asyncActionToken
-         * @param exception
          */
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
@@ -264,6 +250,7 @@ public class ServerService extends Service {
             options.setSocketFactory(sslSocketFactory);
         } catch (CertificateException e) {
             e.printStackTrace();
+            Log.e(TAG, "error certificate");
         }
 
         client.setCallback(mqttCallback);
@@ -284,7 +271,6 @@ public class ServerService extends Service {
      */
     public void publishMessage(final String publishTopic, final String messageJson) {
         if (client.isConnected() && !messageJson.equals("{}")) {
-            Log.i(TAG, "in publish and message is updated " + messageJson);
             try {
                 MqttMessage message = new MqttMessage();
                 message.setPayload(messageJson.getBytes());
@@ -334,10 +320,17 @@ public class ServerService extends Service {
 
     /**
      * BroadcastReceiver object that listens for updates of the node content from the main activity
+     * or for a message to send to the server
      */
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
+            if(intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value)!= null){
+                messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
+            }
+            if (intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value)!= null){
+                String messageForServerJson = intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value);
+                publishMessage(Tag.TOPIC_TO_SERVER.value, messageForServerJson);
+            }
         }
     };
 
@@ -348,7 +341,6 @@ public class ServerService extends Service {
      * @param crtFile   client certificate
      * @param keyFile   client private key
      * @return SSLSocketFactory for the connection
-     * @throws CertificateException
      */
     private SSLSocketFactory setCertificate(InputStream caCrtFile, InputStream crtFile, InputStream keyFile) throws CertificateException {
         Security.addProvider(new BouncyCastleProvider());
@@ -408,17 +400,11 @@ public class ServerService extends Service {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                publishMessage(publishTopic, messageJson);
+                publishMessage(Tag.TOPIC_KEEP_ALIVE.value, messageJson);
             }
         };
         timer = new Timer();
         timer.scheduleAtFixedRate(timerTask, 30000, 60000);
-    }
-
-    private String parseNotifsResponse(String notification){
-        Gson gson = new Gson();
-        ServerNotification serverNotification = gson.fromJson(notification, ServerNotification.class);
-        return serverNotification.getNotif();
     }
 
     /**

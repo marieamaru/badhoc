@@ -1,26 +1,11 @@
 package com.igm.badhoc.activity;
 
-import android.Manifest;
-import android.app.ActivityManager;
-import android.content.Context;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
-import android.telephony.CellInfoGsm;
-import android.telephony.CellInfoLte;
-import android.telephony.CellInfoWcdma;
-import android.telephony.CellSignalStrengthCdma;
-import android.telephony.CellSignalStrengthGsm;
-import android.telephony.CellSignalStrengthLte;
-import android.telephony.CellSignalStrengthWcdma;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,15 +13,20 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.bridgefy.sdk.client.BFBleProfile;
+import com.bridgefy.sdk.client.BFEnergyProfile;
 import com.bridgefy.sdk.client.BFEngineProfile;
 import com.bridgefy.sdk.client.Bridgefy;
 import com.bridgefy.sdk.client.BridgefyClient;
+import com.bridgefy.sdk.client.Config;
 import com.bridgefy.sdk.client.Message;
 import com.bridgefy.sdk.client.RegistrationListener;
+import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 import com.igm.badhoc.R;
@@ -46,18 +36,18 @@ import com.igm.badhoc.fragment.NotificationFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
 import com.igm.badhoc.listener.MessageListenerImpl;
 import com.igm.badhoc.listener.StateListenerImpl;
+import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
 import com.igm.badhoc.service.LocationService;
+import com.igm.badhoc.util.DeviceUtil;
 
-import java.net.NetworkInterface;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 /**
  * Main activity generating the different fragments, and initializing the main node and its parameters
@@ -109,13 +99,21 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      */
     private MessageListenerImpl messageListener;
     /**
-     * Service used to define the position and speed of the device
-     */
-    private LocationService locationService;
-    /**
      * Recurring task updating the device status
      */
     private Timer timer;
+    /**
+     * Badge notifying a new broadcast message is available on the fragment display
+     */
+    private BadgeDrawable badgeDrawableBroadcast;
+    /**
+     * Badge notifying a new private chat message is available on the fragment display
+     */
+    private BadgeDrawable badgeDrawablePrivateChat;
+    /**
+     * OnPause flag to enable or disable push notifications
+     */
+    private boolean onPause;
 
 
     @Override
@@ -130,14 +128,23 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
         currentFragment = aroundMeFragment;
 
-        fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastChatFragment, TAG).hide(broadcastChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, aroundMeFragment, TAG).commit();
+        fragmentManager.beginTransaction().add(R.id.fl_fragment, broadcastChatFragment, TAG).hide(broadcastChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, privateChatFragment, TAG).hide(privateChatFragment).commit();
         fragmentManager.beginTransaction().add(R.id.fl_fragment, notificationFragment, TAG).hide(notificationFragment).commit();
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
-        bottomNavigationView.setOnItemSelectedListener(this);
+
         stateListener = new StateListenerImpl(this);
         messageListener = new MessageListenerImpl(this);
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
+        bottomNavigationView.setOnItemSelectedListener(this);
+
+        badgeDrawableBroadcast = bottomNavigationView.getOrCreateBadge(R.id.action_broadcast);
+        badgeDrawablePrivateChat = bottomNavigationView.getOrCreateBadge(R.id.action_private_chat);
+        badgeDrawableBroadcast.setVisible(false);
+        badgeDrawablePrivateChat.setVisible(false);
+
+        onPause = false;
         timer = new Timer();
         initializeBridgefy();
 
@@ -151,9 +158,11 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         switch (item.getItemId()) {
             case R.id.action_broadcast:
                 loadFragment(broadcastChatFragment);
+                badgeDrawableBroadcast.setVisible(false);
                 return true;
             case R.id.action_private_chat:
                 loadFragment(aroundMeFragment);
+                badgeDrawablePrivateChat.setVisible(false);
                 return true;
             case R.id.action_server:
                 loadFragment(notificationFragment);
@@ -207,6 +216,24 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     }
 
     /**
+     * On pause of the main activity : set the onPause flag to true to enable push notifications
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        onPause = true;
+    }
+
+    /**
+     * On resume of the main activity : set the onPause flag to false to disable push notifications
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        onPause = false;
+    }
+
+    /**
      * Inflates the menu bar with the menu_main layout
      */
     @Override
@@ -234,6 +261,14 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      * Bridgefy method to start the different listeners
      */
     private void startBridgefy() {
+        Config.Builder builder = new Config.Builder();
+        builder.setAntennaType(Config.Antenna.BLUETOOTH_LE);
+        builder.setAutoConnect(true);
+        builder.setEncryption(true);
+        builder.setMaxConnectionRetries(3);
+        builder.setBleProfile(BFBleProfile.BACKWARDS_COMPATIBLE);
+        builder.setEnergyProfile(BFEnergyProfile.HIGH_PERFORMANCE);
+        builder.setEngineProfile(BFEngineProfile.BFConfigProfileLongReach);
         Bridgefy.start(messageListener, stateListener);
     }
 
@@ -257,143 +292,13 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      */
     private void initializeNode(BridgefyClient bridgefyClient) {
         node = Node.builder(bridgefyClient.getUserUuid(), Build.MODEL + " " + Build.MANUFACTURER).build();
-        node.setType("1"); //smartphone
-        node.setSpeed("0");
         node.setIsDominant(Status.DOMINATED.value);
-        node.setMacAddress(getMacAddress());
-        node.setRssi(getRssi());
+        node.setMacAddress(DeviceUtil.getMacAddress());
+        node.setRssi(DeviceUtil.getRssi(this));
         getLocation();
-        getLteSignal(this);
+        DeviceUtil.getLteSignal(this, this.node);
         determinesIfDominant();
         Log.i(TAG, "mac : " + node.getMacAddress() + " position : " + node.getLatitude() + " " + node.getLongitude() + " rssi " + node.getRssi());
-    }
-
-    /**
-     * Method to reach the MAC address of devices below Android 10
-     */
-    private String getRealMacAddress() {
-        try {
-            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
-            for (NetworkInterface nif : all) {
-                if (!nif.getName().equalsIgnoreCase("wlan0")) {
-                    continue;
-                }
-                byte[] macBytes = nif.getHardwareAddress();
-                if (macBytes == null) {
-                    return "";
-                }
-                StringBuilder res1 = new StringBuilder();
-                for (byte b : macBytes) {
-                    res1.append(Integer.toHexString(b & 0xFF)).append(":");
-                }
-                if (res1.length() > 0) {
-                    res1.deleteCharAt(res1.length() - 1);
-                }
-                return res1.toString().toUpperCase();
-            }
-        } catch (Exception ex) {
-            //handle exception
-            return "";
-        }
-        return "";
-    }
-
-    /**
-     * Method to generate a random MAC address for devices above Android 10
-     */
-    private String generateRandomMacAddress() {
-        final String uniqueID = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-        final StringBuilder sb = new StringBuilder(uniqueID);
-        for (int i = 2; i < 30; i = i + 3) {
-            sb.insert(i, ":");
-        }
-        return sb.substring(0, 17);
-    }
-
-    /**
-     * Method to recuperate a MAC address from the device
-     */
-    private String getMacAddress() {
-        String res = getRealMacAddress();
-        if (res.isEmpty()) {
-            res = generateRandomMacAddress();
-        }
-        return res;
-    }
-
-    /**
-     * Method that calls the LocationService to recuperate the position and speed of the device
-     */
-    public void getLocation() {
-        locationService = new LocationService(MainActivity.this);
-        if (locationService.canGetLocation()) {
-            node.setPosition(String.valueOf(locationService.getLongitude()), String.valueOf(locationService.getLatitude()));
-            node.setSpeed(String.valueOf(locationService.getSpeed()));
-        } else {
-            Log.e(TAG, "cannot get location");
-        }
-    }
-
-    /**
-     * Method to recuperate the RSSI signal of the device
-     */
-    private float getRssi() {
-        WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiInfo info = manager.getConnectionInfo();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-        }
-        return info.getRssi();
-    }
-
-    /**
-     * Method that checks if the device is connected to the Internet
-     */
-    private boolean isConnectedToInternet() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        return connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED;
-    }
-
-    /**
-     * Method to recuperate the LTE signal of the device
-     */
-    private void getLteSignal(Context context) throws SecurityException {
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        String strength = null;
-        try {
-            List<CellInfo> cellInfo = telephonyManager.getAllCellInfo();   //This will give info of all sims present inside your mobile
-
-            if (cellInfo != null) {
-                for (int i = 0; i < cellInfo.size(); i++) {
-                    if (cellInfo.get(i).isRegistered()) {
-                        if (cellInfo.get(i) instanceof CellInfoWcdma) {
-                            CellInfoWcdma cellInfoWcdma = (CellInfoWcdma) cellInfo.get(i);
-                            CellSignalStrengthWcdma cellSignalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
-                            strength = String.valueOf(cellSignalStrengthWcdma.getDbm());
-                        } else if (cellInfo.get(i) instanceof CellInfoGsm) {
-                            CellInfoGsm cellInfogsm = (CellInfoGsm) cellInfo.get(i);
-                            CellSignalStrengthGsm cellSignalStrengthGsm = cellInfogsm.getCellSignalStrength();
-                            strength = String.valueOf(cellSignalStrengthGsm.getDbm());
-                        } else if (cellInfo.get(i) instanceof CellInfoLte) {
-                            CellInfoLte cellInfoLte = (CellInfoLte) cellInfo.get(i);
-                            CellSignalStrengthLte cellSignalStrengthLte = cellInfoLte.getCellSignalStrength();
-                            strength = String.valueOf(cellSignalStrengthLte.getDbm());
-                        } else if (cellInfo.get(i) instanceof CellInfoCdma) {
-                            CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfo.get(i);
-                            CellSignalStrengthCdma cellSignalStrengthCdma = cellInfoCdma.getCellSignalStrength();
-                            strength = String.valueOf(cellSignalStrengthCdma.getDbm());
-                        }
-                    }
-                }
-            }
-            if (strength != null) {
-                this.node.setLteSignal(strength);
-            }
-        } catch (SecurityException e) {
-            Log.e(TAG, "not allowed to get lte");
-        }
     }
 
     /**
@@ -449,19 +354,6 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     }
 
     /**
-     * Method that checks if the Service passed is still running
-     */
-    public boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Method to send a message of type broadcast to other devices connected using Bridgefy
      */
     private void broadcastMessageToNeighbors(final String broadcastType) {
@@ -481,13 +373,13 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     TimerTask timerTask = new TimerTask() {
         @Override
         public void run() {
-            if (isConnectedToInternet() && node.isDominant() == Status.DOMINATED.value && node.getDominant() == null) {
+            if (DeviceUtil.isConnectedToInternet(getApplicationContext()) && node.isDominant() == Status.DOMINATED.value && node.getDominant() == null) {
                 node.setIsDominant(Status.DOMINATING.value);
                 broadcastIntentAction(Tag.ACTION_CONNECT.value, "connect");
                 broadcastMessageToNeighbors(Tag.PAYLOAD_POTENTIAL_DOMINANT.value);
                 Log.i(TAG, "I am dominant");
             }
-            if (!isConnectedToInternet() && node.isDominant() == Status.DOMINATING.value) {
+            if (!DeviceUtil.isConnectedToInternet(getApplicationContext()) && node.isDominant() == Status.DOMINATING.value) {
                 node.setIsDominant(Status.DOMINATED.value);
                 broadcastIntentAction(Tag.ACTION_CONNECT.value, "disconnect");
                 broadcastMessageToNeighbors(Tag.PAYLOAD_NO_LONGER_DOMINANT.value);
@@ -501,6 +393,62 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
      */
     private void determinesIfDominant() {
         timer.scheduleAtFixedRate(timerTask, 0, 10000);
+    }
+
+    /**
+     * If the application is onPause, displays a push notification for certain events
+     * @param str message to print on notifications
+     */
+    private void printNotify(String str) {
+        if (onPause) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                String NOTIFICATION_CHANNEL_ID = "com.igm.badhoc";
+                String channelName = "Message channel";
+                NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationManager manager = getSystemService(NotificationManager.class);
+                assert manager != null;
+                manager.createNotificationChannel(channel);
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+                builder.setContentTitle("New Message")
+                        .setContentText(str)
+                        .setSmallIcon(R.drawable.badhoc)
+                        .setAutoCancel(true);
+                NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
+                managerCompat.notify(1, builder.build());
+            }
+        }
+    }
+
+    /**
+     * Displays a visual red dot when a private or broadcast message is available,
+     * and if the application is onPause, print a push notification
+     * @param id tab to display the red badge on
+     */
+    public void displayNotificationBadge(String id) {
+        switch (id) {
+            case "broadcast":
+                if (currentFragment != broadcastChatFragment)
+                    badgeDrawableBroadcast.setVisible(true);
+                printNotify(getResources().getString(R.string.push_notification_public));
+                break;
+            case "private_chat":
+                badgeDrawablePrivateChat.setVisible(true);
+                printNotify(getResources().getString(R.string.push_notification_private));
+                break;
+        }
+    }
+
+    /**
+     * Method that calls the LocationService to recuperate the position and speed of the device
+     */
+    private void getLocation() {
+        LocationService locationService = new LocationService(this);
+        if (locationService.canGetLocation()) {
+            node.setPosition(String.valueOf(locationService.getLongitude()), String.valueOf(locationService.getLatitude()));
+            node.setSpeed(String.valueOf(locationService.getSpeed()));
+        } else {
+            Log.e(TAG, "cannot get location");
+        }
     }
 
 }

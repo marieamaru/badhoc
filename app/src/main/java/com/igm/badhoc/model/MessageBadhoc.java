@@ -17,6 +17,14 @@ public class MessageBadhoc implements Serializable {
      */
     public final static int OUTGOING_MESSAGE = 1;
     /**
+     * Tag corresponding to an incoming image
+     */
+    public final static int INCOMING_IMAGE = 2;
+    /**
+     * Tag corresponding to an outgoing image
+     */
+    public final static int OUTGOING_IMAGE = 3;
+    /**
      * The direction of the message : incoming or outgoing
      */
     private int direction;
@@ -28,6 +36,10 @@ public class MessageBadhoc implements Serializable {
      * Content of the message
      */
     private final String text;
+    /**
+     * Array of byte containing an image
+     */
+    private byte[] data;
 
     /**
      * Constructor for the MessageBadhoc class
@@ -81,6 +93,22 @@ public class MessageBadhoc implements Serializable {
      */
     public void setDeviceName(String deviceName) {
         this.deviceName = deviceName;
+    }
+
+    /**
+     * Set data array for data field
+     * @param data data array to set
+     */
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
+    /**
+     * Getter for data field
+     * @return data array
+     */
+    public byte[] getData() {
+        return data;
     }
 
     @Override
