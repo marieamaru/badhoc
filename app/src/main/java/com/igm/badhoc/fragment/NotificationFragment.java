@@ -180,7 +180,7 @@ public class NotificationFragment extends Fragment {
             messageToSend = ParserUtil.parseMessageForServer(toServerNotification);
             mainActivity.broadcastIntentAction(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value, messageToSend);
         } else {
-            if (mainActivity.getNode().getDominant() != null){
+            if (mainActivity.getNode().getDominant() != null) {
                 dominantMacAddress = mainActivity.getNode().getDominant().getMacAddress();
                 toServerNotification = new ToServerNotification(dominantMacAddress, message);
                 messageToSend = ParserUtil.parseMessageForServer(toServerNotification);
@@ -197,8 +197,9 @@ public class NotificationFragment extends Fragment {
 
     /**
      * Method to send a private message to the dominant node to server as relay with the server
+     *
      * @param messageToSend message sent to the dominant node
-     * @param id id of the dominant node to send the message to
+     * @param id            id of the dominant node to send the message to
      */
     public void onMessageSend(final String id, final String messageToSend) {
         if (messageToSend.length() > 0) {

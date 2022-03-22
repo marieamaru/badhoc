@@ -52,9 +52,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                         inflate((R.layout.notification_row_outgoing), parent, false);
                 break;
         }
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.notification_row_incoming, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(messageView);
     }
 
     @Override

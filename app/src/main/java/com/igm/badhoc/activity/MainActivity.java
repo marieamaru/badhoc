@@ -36,7 +36,6 @@ import com.igm.badhoc.fragment.NotificationFragment;
 import com.igm.badhoc.fragment.PrivateChatFragment;
 import com.igm.badhoc.listener.MessageListenerImpl;
 import com.igm.badhoc.listener.StateListenerImpl;
-import com.igm.badhoc.model.MessageBadhoc;
 import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.Status;
 import com.igm.badhoc.model.Tag;
@@ -44,8 +43,6 @@ import com.igm.badhoc.service.LocationService;
 import com.igm.badhoc.util.DeviceUtil;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -397,6 +394,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
     /**
      * If the application is onPause, displays a push notification for certain events
+     *
      * @param str message to print on notifications
      */
     private void printNotify(String str) {
@@ -422,6 +420,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     /**
      * Displays a visual red dot when a private or broadcast message is available,
      * and if the application is onPause, print a push notification
+     *
      * @param id tab to display the red badge on
      */
     public void displayNotificationBadge(String id) {

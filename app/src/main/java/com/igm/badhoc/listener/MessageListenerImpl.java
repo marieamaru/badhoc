@@ -111,20 +111,10 @@ public class MessageListenerImpl extends MessageListener {
             mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
             mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
         }
-        if (Tag.PAYLOAD_IMAGE.value.equals(broadcastType)) {
-            byte[] fileBytes = message.getData();
-            MessageBadhoc messageBadhoc = new MessageBadhoc(incomingMsg);
-            messageBadhoc.setData(fileBytes);
-            messageBadhoc.setDeviceName(deviceName);
-            messageBadhoc.setDirection(MessageBadhoc.INCOMING_IMAGE);
-            mainActivity.getBroadcastFragment().addMessage(messageBadhoc);
-            mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
-        }
         if (Tag.PAYLOAD_FROM_SERVER.value.equals(broadcastType)) {
             NotificationDisplay notificationDisplay = new NotificationDisplay(incomingMsg);
             notificationDisplay.setDirection(NotificationDisplay.INCOMING_MESSAGE);
             mainActivity.getNotificationFragment().addNotification(notificationDisplay);
-            mainActivity.displayNotificationBadge(Tag.BROADCAST_CHAT.value);
         }
         if (Tag.PAYLOAD_NO_LONGER_DOMINANT.value.equals(broadcastType)) {
             Log.i(TAG, "received that my dominant is no longer dominant");
