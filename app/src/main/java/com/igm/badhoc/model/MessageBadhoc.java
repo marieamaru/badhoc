@@ -97,6 +97,7 @@ public class MessageBadhoc implements Serializable {
 
     /**
      * Set data array for data field
+     *
      * @param data data array to set
      */
     public void setData(byte[] data) {
@@ -105,6 +106,7 @@ public class MessageBadhoc implements Serializable {
 
     /**
      * Getter for data field
+     *
      * @return data array
      */
     public byte[] getData() {

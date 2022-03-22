@@ -324,10 +324,10 @@ public class ServerService extends Service {
      */
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            if(intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value)!= null){
+            if (intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value) != null) {
                 messageJson = intent.getStringExtra(Tag.ACTION_UPDATE_NODE_INFO.value);
             }
-            if (intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value)!= null){
+            if (intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value) != null) {
                 String messageForServerJson = intent.getStringExtra(Tag.ACTION_SEND_MESSAGE_TO_SERVER.value);
                 publishMessage(Tag.TOPIC_TO_SERVER.value, messageForServerJson);
             }

@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonSerializer;
-import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.FromServerNotification;
+import com.igm.badhoc.model.Node;
 import com.igm.badhoc.model.ToServerNotification;
 
 import java.util.HashMap;
