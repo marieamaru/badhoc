@@ -45,8 +45,4 @@ public class DeviceUtilIntegrationTest {
         assertThat(isConnectedToInternet).isTrue();
     }
 
-    @Test
-    public void isServiceStartedTest() {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    }
 }

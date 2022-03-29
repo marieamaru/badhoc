@@ -34,15 +34,4 @@ public class AroundMeFragmentTest {
         onView(withId(R.id.notif_list)).check(matches(isDisplayed()));
     }
 
-    @Test
-    @DisplayName("Verify all elements are displayed")
-    public void addNeighborToConversationsTest() {
-        fragmentScenario.onFragment(fragment ->
-        {
-            final Node node = Node.builder("123", "testDevice").build();
-            fragment.addNeighborToConversations(node);
-        });
-        //assertThat();
-
-    }
 }

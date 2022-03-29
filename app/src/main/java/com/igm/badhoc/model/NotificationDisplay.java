@@ -22,6 +22,9 @@ public class NotificationDisplay {
      * Content of the notification
      */
     private final String text;
+    /**
+     * Direction of the notification
+     */
     private int direction;
 
     public NotificationDisplay(final String text) {

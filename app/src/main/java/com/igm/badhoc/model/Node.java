@@ -29,7 +29,7 @@ public class Node {
     /**
      * Type of the device (smartphone...)
      */
-    private String type;
+    private final String type;
     /**
      * Speed of the device
      */
