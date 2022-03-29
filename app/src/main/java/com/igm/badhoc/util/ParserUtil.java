@@ -50,7 +50,7 @@ public class ParserUtil {
     }
 
     /**
-     * Parser method to form a message of correct format for the ??? topic
+     * Serializing method to form a message for the server
      *
      * @param toServerNotification message to parse
      * @return the message sent to the server
