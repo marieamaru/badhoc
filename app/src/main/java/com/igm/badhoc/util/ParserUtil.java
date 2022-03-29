@@ -38,7 +38,7 @@ public class ParserUtil {
     }
 
     /**
-     * Parser method to form a message of correct format from the notif topic
+     * Parser method to form a message of correct format from the notifs topic
      *
      * @param notification notification to parse
      * @return the message sent by the server
